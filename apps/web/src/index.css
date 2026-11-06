@@ -1,0 +1,5 @@
+@import 'tailwindcss';
+
+@theme {
+  --radius-lg: 0.75rem;
+}

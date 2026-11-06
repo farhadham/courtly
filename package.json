@@ -1,0 +1,19 @@
+{
+  "name": "courtly",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm run build -w @courtly/contracts && npm run build -w @courtly/api && npm run build -w @courtly/web",
+    "typecheck": "npm run typecheck -w @courtly/contracts && npm run typecheck -w @courtly/api && npm run typecheck -w @courtly/web",
+    "test": "npm run test -w @courtly/api",
+    "dev:api": "npm run dev -w @courtly/api",
+    "dev:web": "npm run dev -w @courtly/web"
+  }
+}

@@ -1,0 +1,60 @@
+name: courtly
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: courtly
+      POSTGRES_PASSWORD: courtly
+      POSTGRES_DB: courtly
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U courtly -d courtly']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: runs migrations and seed, then exits. The API waits for it to
+  # finish so it never serves traffic against an unmigrated schema.
+  migrate:
+    build:
+      context: .
+      target: api
+    working_dir: /app/apps/api
+    command:
+      - sh
+      - -c
+      - npm run db:migrate --if-present && npm run db:seed --if-present
+    environment:
+      DATABASE_URL: postgres://courtly:courtly@db:5432/courtly
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    build:
+      context: .
+      target: api
+    environment:
+      DATABASE_URL: postgres://courtly:courtly@db:5432/courtly
+      JWT_SECRET: dev-secret-change-me
+      PORT: '3001'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - '3000:80'
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
