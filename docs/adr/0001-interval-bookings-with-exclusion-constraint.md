@@ -10,12 +10,12 @@ for any client, including `curl`.
 
 **Considered options**
 
-- *Slot rows + `UNIQUE (court_id, slot_start)`* — also race-safe, and easier to explain. Rejected
+- _Slot rows + `UNIQUE (court_id, slot_start)`_ — also race-safe, and easier to explain. Rejected
   because a booking becomes N rows, cancellation becomes a multi-row delete, a 2-hour booking's
   contiguity is no longer expressed by the schema, and changing the granularity is a rewrite.
-- *Application-level overlap check* — rejected outright. Two concurrent requests both see the slot
+- _Application-level overlap check_ — rejected outright. Two concurrent requests both see the slot
   as free and both insert. This is the exact failure the brief asks about.
-- *`SERIALIZABLE` isolation* — would work, but pushes retry handling into every write path and is
+- _`SERIALIZABLE` isolation_ — would work, but pushes retry handling into every write path and is
   harder to demonstrate in a code review than one constraint.
 
 **Consequences**

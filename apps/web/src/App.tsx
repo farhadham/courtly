@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import type { HealthResponse } from '@courtly/contracts';
 
 type ApiState =
-  | { kind: 'loading' }
-  | { kind: 'ok'; health: HealthResponse }
-  | { kind: 'error'; message: string };
+  { kind: 'loading' } | { kind: 'ok'; health: HealthResponse } | { kind: 'error'; message: string };
 
 export default function App() {
   const [api, setApi] = useState<ApiState>({ kind: 'loading' });
@@ -45,9 +43,7 @@ export default function App() {
         <h2 className="mb-2 text-sm font-medium">API</h2>
         {api.kind === 'loading' && <p className="text-sm">Checking…</p>}
         {api.kind === 'ok' && (
-          <p className="text-sm text-green-700">
-            Connected — uptime {api.health.uptimeSeconds}s
-          </p>
+          <p className="text-sm text-green-700">Connected — uptime {api.health.uptimeSeconds}s</p>
         )}
         {api.kind === 'error' && (
           <p className="text-sm text-red-700">Unreachable — {api.message}</p>
