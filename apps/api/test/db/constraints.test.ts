@@ -81,6 +81,22 @@ describe('bookings schema', () => {
     expect(error).toMatchObject({ code: '23P01' });
   });
 
+  it('lets exactly one of two concurrent inserts claim the slot', async () => {
+    const attempt = (): Promise<void> =>
+      insertBooking({
+        startAt: '2026-11-07T08:00:00Z',
+        endAt: '2026-11-07T10:00:00Z',
+      });
+
+    const results = await Promise.allSettled([attempt(), attempt()]);
+
+    expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+    expect(results.find((result) => result.status === 'rejected')).toMatchObject({
+      status: 'rejected',
+      reason: { code: '23P01' },
+    });
+  });
+
   it('allows back-to-back bookings because bounds are half-open', async () => {
     await insertBooking({
       startAt: '2026-11-07T08:00:00Z',

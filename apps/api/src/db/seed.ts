@@ -113,7 +113,7 @@ export async function seedDatabase(connectionString = databaseUrl()): Promise<vo
   const { db, pool } = createDatabase(connectionString);
   const passwordHash = hashSync(PASSWORD, 10);
 
-  const people: { id: string; email: string; passwordHash: string; role: UserRole }[] = [
+  const userRows: { id: string; email: string; passwordHash: string; role: UserRole }[] = [
     {
       id: USER_IDS.user,
       email: 'user@courtly.test',
@@ -134,7 +134,7 @@ export async function seedDatabase(connectionString = databaseUrl()): Promise<vo
     },
   ];
 
-  const facilities = [
+  const courtRows = [
     {
       id: COURT_IDS.padel1,
       name: 'Padel 1',
@@ -167,7 +167,7 @@ export async function seedDatabase(connectionString = databaseUrl()): Promise<vo
   try {
     await db
       .insert(users)
-      .values(people)
+      .values(userRows)
       .onConflictDoUpdate({
         target: users.id,
         set: {
@@ -179,7 +179,7 @@ export async function seedDatabase(connectionString = databaseUrl()): Promise<vo
 
     await db
       .insert(courts)
-      .values(facilities)
+      .values(courtRows)
       .onConflictDoUpdate({
         target: courts.id,
         set: {
