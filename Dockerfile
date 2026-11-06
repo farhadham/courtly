@@ -25,6 +25,7 @@ COPY --from=build /app/packages/contracts/package.json ./packages/contracts/pack
 COPY --from=build /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=build /app/apps/api/package.json ./apps/api/package.json
 COPY --from=build /app/apps/api/dist ./apps/api/dist
+COPY --from=build /app/apps/api/drizzle ./apps/api/drizzle
 WORKDIR /app/apps/api
 EXPOSE 3001
 CMD ["node", "dist/main.js"]

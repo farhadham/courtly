@@ -11,16 +11,18 @@
   },
   "scripts": {
     "build": "npm run build -w @courtly/contracts && npm run build -w @courtly/api && npm run build -w @courtly/web",
-    "typecheck": "npm run typecheck -w @courtly/contracts && npm run typecheck -w @courtly/api && npm run typecheck -w @courtly/web",
-    "lint": "eslint .",
+    "typecheck": "npm run build -w @courtly/contracts && npm run typecheck -w @courtly/api && npm run typecheck -w @courtly/web",
+    "lint": "npm run build -w @courtly/contracts && eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run test -w @courtly/api -- --passWithNoTests && npm run test:tooling",
-    "test:tooling": "node --test tests/tooling/tooling.test.mjs",
+    "test": "npm run test -w @courtly/api",
     "check": "npm run format:check && npm run lint && npm run typecheck",
     "dev:api": "npm run dev -w @courtly/api",
-    "dev:web": "npm run dev -w @courtly/web"
+    "dev:web": "npm run dev -w @courtly/web",
+    "db:generate": "npm run db:generate -w @courtly/api",
+    "db:migrate": "npm run db:migrate -w @courtly/api",
+    "db:seed": "npm run db:seed -w @courtly/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

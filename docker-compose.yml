@@ -27,7 +27,7 @@ services:
     command:
       - sh
       - -c
-      - npm run db:migrate --if-present && npm run db:seed --if-present
+      - npm run db:migrate:prod --if-present && npm run db:seed:prod --if-present
     environment:
       DATABASE_URL: postgres://courtly:courtly@db:5432/courtly
     depends_on:

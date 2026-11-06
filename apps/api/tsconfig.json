@@ -2,11 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "types": ["node"]
+    "types": ["node"],
+    "noEmit": true
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts", "drizzle.config.ts", "vitest.config.ts"]
 }
