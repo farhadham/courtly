@@ -15,6 +15,13 @@
       "when": 1793987032009,
       "tag": "0001_booking_no_overlap",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794064327526,
+      "tag": "0002_courts_name_lower_unique",
+      "breakpoints": true
     }
   ]
 }

@@ -203,6 +203,22 @@ describe('courts API', () => {
         },
       });
     });
+
+    it('rejects a name that differs only by case', async () => {
+      const response = await request(app)
+        .post('/admin/courts')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'padel 1',
+          sportType: 'padel',
+          hourlyPriceCents: 2_000,
+          opensAt: '08:00',
+          closesAt: '23:00',
+        })
+        .expect(409);
+
+      expect(apiErrorSchema.parse(response.body).error.code).toBe('COURT_NAME_TAKEN');
+    });
   });
 
   describe('PATCH /admin/courts/:id', () => {
@@ -277,6 +293,16 @@ describe('courts API', () => {
           details: {},
         },
       });
+    });
+
+    it('rejects renaming a court to a name that differs only by case', async () => {
+      const response = await request(app)
+        .patch('/admin/courts/22222222-2222-4222-8222-222222222201')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'padel 2' })
+        .expect(409);
+
+      expect(apiErrorSchema.parse(response.body).error.code).toBe('COURT_NAME_TAKEN');
     });
 
     it('answers an unknown court with NOT_FOUND', async () => {
