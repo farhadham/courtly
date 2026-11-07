@@ -11,7 +11,7 @@ Domain vocabulary is defined in [`GLOSSARY.md`](../GLOSSARY.md). Use those terms
 | **User**  | Browse active courts, view availability, book 1–2 consecutive hours, cancel own bookings within the window, list own bookings |
 | **Admin** | Everything read-only, plus create/edit/deactivate courts and view all bookings for a day                                      |
 
-Roles are enforced on the API by guards. Hiding a button is not enforcement. Admins do not create bookings.
+Roles are enforced on the API by middleware. Hiding a button is not enforcement. Admins do not create bookings.
 
 ## Domain model
 
@@ -122,7 +122,7 @@ For a court and a Lisbon calendar day, return every one-hour slot from `opens_at
 | --------- | ------------------------------------------------------------------------ |
 | Monorepo  | npm workspaces — `apps/api`, `apps/web`, `packages/contracts`            |
 | Runtime   | Node 22 LTS                                                              |
-| Backend   | NestJS                                                                   |
+| Backend   | Express 5 — explicit routers and middleware                              |
 | Database  | PostgreSQL 16                                                            |
 | ORM       | Drizzle + `drizzle-zod`                                                  |
 | Contracts | Zod schemas shared by API and web                                        |
