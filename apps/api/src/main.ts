@@ -1,13 +1,23 @@
-import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { createServer } from 'node:http';
+import { createApp } from './app';
 
-async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
-  app.enableShutdownHooks();
+const port = Number(process.env.PORT ?? 3001);
+const server = createServer(createApp());
 
-  const port = Number(process.env.PORT ?? 3001);
-  await app.listen(port, '0.0.0.0');
+server.listen(port, '0.0.0.0', () => {
+  console.log(`Courtly API listening on http://0.0.0.0:${port}`);
+});
+
+function shutdown(signal: NodeJS.Signals): void {
+  console.log(`${signal} received; closing the HTTP server.`);
+
+  server.close((error) => {
+    if (error) {
+      console.error(error);
+      process.exitCode = 1;
+    }
+  });
 }
 
-void bootstrap();
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
