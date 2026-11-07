@@ -2,22 +2,12 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { Router } from 'express';
 import { courtIdParamSchema, courtListQuerySchema, courts } from '@courtly/contracts';
-import type { Court } from '@courtly/contracts';
+import type { Court, CourtRow } from '@courtly/contracts';
 import type { AppDatabase } from '../db/client';
 import { ApiError } from '../http/errors';
 
 export interface CourtsRouterDependencies {
   db: AppDatabase;
-}
-
-interface CourtRowLike {
-  id: string;
-  name: string;
-  sportType: string;
-  hourlyPriceCents: number;
-  opensAt: string;
-  closesAt: string;
-  isActive: boolean;
 }
 
 /**
@@ -28,7 +18,7 @@ export function toTimeOfDay(value: string): string {
   return value.slice(0, 5);
 }
 
-export function toCourtResponse(court: CourtRowLike): Court {
+export function toCourtResponse(court: CourtRow): Court {
   return {
     id: court.id,
     name: court.name,
