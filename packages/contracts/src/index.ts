@@ -8,7 +8,7 @@
 
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { bookings, courts, users } from './schema';
+import { USER_ROLES, bookings, courts, users } from './schema';
 
 export {
   BOOKING_STATUSES,
@@ -26,6 +26,58 @@ export interface HealthResponse {
   status: 'ok';
   uptimeSeconds: number;
 }
+
+/**
+ * The closed set of business failure codes from the API error contract. Every
+ * failure that a caller can act on carries exactly one of these codes.
+ */
+export const ERROR_CODES = [
+  'VALIDATION_FAILED',
+  'UNAUTHORIZED',
+  'FORBIDDEN',
+  'NOT_FOUND',
+  'SLOT_TAKEN',
+  'CANCELLATION_WINDOW_CLOSED',
+  'BOOKING_IN_PAST',
+  'OUTSIDE_OPENING_HOURS',
+  'COURT_INACTIVE',
+] as const;
+
+export type ErrorCode = (typeof ERROR_CODES)[number];
+
+export const apiErrorSchema = z.object({
+  error: z.object({
+    code: z.enum(ERROR_CODES),
+    message: z.string(),
+    details: z.record(z.string(), z.unknown()),
+  }),
+});
+
+export type ApiErrorBody = z.infer<typeof apiErrorSchema>;
+
+/**
+ * The authenticated principal returned by `POST /auth/login` and encoded in
+ * the JWT. It never includes the password hash.
+ */
+export const authUserSchema = z.object({
+  id: z.uuid(),
+  email: z.email(),
+  role: z.enum(USER_ROLES),
+});
+
+export const loginRequestSchema = z.object({
+  email: z.email(),
+  password: z.string().min(1),
+});
+
+export const loginResponseSchema = z.object({
+  token: z.string().min(1),
+  user: authUserSchema,
+});
+
+export type AuthUser = z.infer<typeof authUserSchema>;
+export type LoginRequest = z.infer<typeof loginRequestSchema>;
+export type LoginResponse = z.infer<typeof loginResponseSchema>;
 
 export const userRowSchema = createSelectSchema(users);
 export const courtRowSchema = createSelectSchema(courts);

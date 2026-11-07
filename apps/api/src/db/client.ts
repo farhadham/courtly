@@ -6,6 +6,8 @@ export interface Database {
   pool: Pool;
 }
 
+export type AppDatabase = Database['db'];
+
 export function createDatabase(connectionString: string): Database {
   const pool = new Pool({ connectionString });
 
