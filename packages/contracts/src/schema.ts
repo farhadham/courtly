@@ -8,6 +8,7 @@ import {
   text,
   time,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -32,7 +33,7 @@ export const courts = pgTable(
   'courts',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    name: text('name').notNull().unique(),
+    name: text('name').notNull(),
     sportType: text('sport_type').notNull(),
     hourlyPriceCents: integer('hourly_price_cents').notNull(),
     opensAt: time('opens_at').notNull(),
@@ -40,6 +41,7 @@ export const courts = pgTable(
     isActive: boolean('is_active').notNull().default(true),
   },
   (table) => [
+    uniqueIndex('courts_name_unique').on(sql`lower(${table.name})`),
     check('courts_sport_type_length', sql`char_length(${table.sportType}) between 1 and 50`),
     check('courts_hourly_price_non_negative', sql`${table.hourlyPriceCents} >= 0`),
     check('courts_opening_window', sql`${table.opensAt} < ${table.closesAt}`),

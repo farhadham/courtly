@@ -5,6 +5,7 @@ import type { AppDatabase } from './db/client';
 import { errorHandler } from './http/errors';
 import { createAdminRouter } from './routes/admin';
 import { createAuthRouter } from './routes/auth';
+import { createCourtsRouter } from './routes/courts';
 import { createHealthRouter } from './routes/health';
 
 export interface AppDependencies {
@@ -32,7 +33,8 @@ export function createApp({ db, jwtSecret }: AppDependencies): Express {
   // Everything mounted below this line requires a valid token. Login is the
   // only public business route.
   app.use(requireAuth(jwtSecret));
-  app.use('/admin', requireRole('ADMIN'), createAdminRouter());
+  app.use('/courts', createCourtsRouter({ db }));
+  app.use('/admin', requireRole('ADMIN'), createAdminRouter({ db }));
 
   // Unknown routes answer in the error contract rather than Express's HTML
   // default, so API consumers only ever parse one response shape.

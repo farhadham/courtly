@@ -99,6 +99,7 @@ Codes are a closed enum, typed in `packages/contracts`:
 | `FORBIDDEN`                  | 403    |
 | `NOT_FOUND`                  | 404    |
 | `SLOT_TAKEN`                 | 409    |
+| `COURT_NAME_TAKEN`           | 409    |
 | `CANCELLATION_WINDOW_CLOSED` | 409    |
 | `BOOKING_IN_PAST`            | 422    |
 | `OUTSIDE_OPENING_HOURS`      | 422    |
