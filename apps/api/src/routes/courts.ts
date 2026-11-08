@@ -66,8 +66,9 @@ export function createCourtsRouter({
     }
 
     const filters: SQL[] = [];
+    const auth = requireAuthUser(req);
 
-    if (!(parsed.data.includeInactive === 'true' && requireAuthUser(req).role === 'ADMIN')) {
+    if (!(parsed.data.includeInactive === 'true' && auth.role === 'ADMIN')) {
       filters.push(eq(courts.isActive, true));
     }
 

@@ -15,6 +15,21 @@ If the assertion traces to the spec, an ADR, or the glossary, stop and ask befor
 
 Never make a test pass by weakening its assertions, skipping it, or mocking away the failure. Deleting a test is a last resort and is always reported.
 
+## Changing migrations
+
+Never edit a generated migration file by hand. Drizzle owns those files.
+
+- **Schema change** — change the Drizzle schema, then regenerate:
+  `npm run db:generate -w @courtly/api` from the repo root (or
+  `npx drizzle-kit generate --name <name>` from `apps/api`).
+- **Data or custom SQL** — generate an empty migration first, then fill it in:
+  `npx drizzle-kit generate --custom --name <name>` from `apps/api`. Only the
+  file drizzle-kit creates may be edited by hand; never touch a generated
+  schema migration, the `meta/` journal, or the snapshots.
+
+Migration order is creation order, so generate a migration that must run
+earlier before the one that depends on it.
+
 ## Agent skills
 
 ### Issue tracker

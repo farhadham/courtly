@@ -22,7 +22,7 @@ Roles are enforced on the API by middleware. Hiding a button is not enforcement.
 | `id`                 | uuid    |                                                  |
 | `name`               | text    | unique                                           |
 | `sport_type`         | text    | free label — padel, tennis, squash, … 1–50 chars |
-| `hourly_price_cents` | integer | money is never a float                           |
+| `hourly_price_cents` | integer | money is never a float; must be positive         |
 | `opens_at`           | time    | local, e.g. `08:00`                              |
 | `closes_at`          | time    | local, e.g. `23:00`                              |
 | `is_active`          | boolean |                                                  |
@@ -59,6 +59,8 @@ Deactivating a court never deletes it and never deletes its bookings.
 8. **Cancelled bookings.** Kept as rows with `status = 'CANCELLED'`. Their slots return to availability. They never count toward revenue. They stay in the owner's history but never appear as upcoming.
 9. **Price snapshot.** Revenue for a past booking is unaffected by later edits to the court's price.
 10. **Inactive courts.** Not listed to users, refuse new bookings, keep existing bookings, and still count toward revenue.
+
+**Rejection precedence.** When a start breaks more than one rule, the API reports the first failing check in this order: inactive court, past start, opening hours, slot alignment. An off-grid start before opening therefore returns `OUTSIDE_OPENING_HOURS`, not `BOOKING_OFF_SLOT`. Every booking rejection is still `422`.
 
 ## API surface
 

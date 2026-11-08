@@ -1,5 +1,5 @@
 {
-  "id": "0ff71b10-62e1-4a03-95c1-729f1230886b",
+  "id": "a1af6027-a9cd-4ce6-a9ca-fd59874dd7db",
   "prevId": "5679b67a-6eef-4d97-b65e-610232e35806",
   "version": "7",
   "dialect": "postgresql",
@@ -71,28 +71,28 @@
         "bookings_court_id_courts_id_fk": {
           "name": "bookings_court_id_courts_id_fk",
           "tableFrom": "bookings",
-          "tableTo": "courts",
           "columnsFrom": [
             "court_id"
           ],
+          "tableTo": "courts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "restrict"
         },
         "bookings_user_id_users_id_fk": {
           "name": "bookings_user_id_users_id_fk",
           "tableFrom": "bookings",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "restrict"
         }
       },
       "compositePrimaryKeys": {},
@@ -173,15 +173,15 @@
           "columns": [
             {
               "expression": "lower(\"name\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {},
@@ -193,9 +193,9 @@
           "name": "courts_sport_type_length",
           "value": "char_length(\"courts\".\"sport_type\") between 1 and 50"
         },
-        "courts_hourly_price_positive": {
-          "name": "courts_hourly_price_positive",
-          "value": "\"courts\".\"hourly_price_cents\" > 0"
+        "courts_hourly_price_non_negative": {
+          "name": "courts_hourly_price_non_negative",
+          "value": "\"courts\".\"hourly_price_cents\" >= 0"
         },
         "courts_opening_window": {
           "name": "courts_opening_window",
@@ -241,10 +241,10 @@
       "uniqueConstraints": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "email"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -259,10 +259,10 @@
   },
   "enums": {},
   "schemas": {},
+  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},
