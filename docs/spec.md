@@ -135,7 +135,7 @@ For a court and a Lisbon calendar day, return every one-hour slot from `opens_at
 | Database  | PostgreSQL 16                                                            |
 | ORM       | Drizzle + `drizzle-zod`                                                  |
 | Contracts | Zod schemas shared by API and web                                        |
-| Frontend  | Vite + React + TanStack Query + shadcn/ui + Tailwind                     |
+| Frontend  | Vite + React + TanStack Router + TanStack Query + shadcn/ui + Tailwind   |
 | Auth      | JWT (HS256), bcryptjs                                                    |
 | Tests     | Vitest — pure unit for domain rules, real Postgres for DB-enforced rules |
 

@@ -11,6 +11,10 @@ the JWT/role scope.
 **Trade-off:** XSS can read the token. Cookies hide it from JavaScript but need
 a full CSRF flow. Half-done cookies are worse.
 
+**Storage:** the browser keeps the token in memory and persists it to
+`localStorage` under `courtly.session`, so a reload does not sign the user out.
+That makes the XSS trade-off above the accepted cost rather than an oversight.
+
 **One-liner:** "Bearer token fits the stateless SPA and avoids CSRF. Cookies
 would need a full CSRF flow to be safer, which is extra scope this challenge
 doesn't need."
@@ -51,5 +55,32 @@ files can't pollute each other. No mocks for domain rules.
 
 **One-liner:** "Pure rules are unit-tested; anything the database enforces is
 tested against a real database, and HTTP behaviour goes through the real app."
+
+## Frontend testing: logic only, not full UI
+
+**Decision:** The web app is tested at the logic layer only: slot selection
+(1 vs 2 hours, adjacency, fits before closing), the cancellation offer window,
+facility-time formatting, and error code → message mapping. There are no
+component/rendering tests and no browser E2E suite.
+
+**Why:** Every business rule already has an owner. The API enforces duration,
+opening hours, future-only, overlap and the cancellation window, and those rules
+are covered by unit and real-Postgres tests. Re-checking them in the browser
+would assert the same behaviour through a second, slower stack, and would need
+mocks to isolate the UI — which the project's testing rule rejects. The web
+layer's own job is presentation and wiring; that is checked by the manual smoke
+pass against the seed data.
+
+**Not a time shortcut:** this is a deliberate scope decision, not something
+skipped under time pressure. If a screen grows branching logic of its own,
+component tests with Testing Library would be added; today every screen reads
+one typed API and renders it.
+
+**Trade-off:** rendering regressions, focus order and responsive layout are not
+caught automatically. Keyboard behaviour, focus visibility and the
+`AVAILABLE`/`TAKEN`/`PAST` distinction are part of the manual checklist.
+
+**One-liner:** "The rules are tested where they are enforced. Duplicating server
+rules in the browser would only add mocks, so the web layer is checked by hand."
 
 <!-- Add more defense notes below. -->
