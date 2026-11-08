@@ -1,3 +1,4 @@
+import type { ErrorCode } from '@courtly/contracts';
 import { courtOpeningWindow, localDateAt } from './availability';
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -9,7 +10,15 @@ export interface BookingCourt {
   hourlyPriceCents: number;
 }
 
-export type BookingRejection = 'BOOKING_IN_PAST' | 'OUTSIDE_OPENING_HOURS' | 'COURT_INACTIVE';
+/**
+ * The contract enum is the single source of truth for wire codes; this picks
+ * out the subset the domain can reject a booking with, so a rename there flows
+ * through instead of needing a second edit here.
+ */
+export type BookingRejection = Extract<
+  ErrorCode,
+  'BOOKING_IN_PAST' | 'OUTSIDE_OPENING_HOURS' | 'COURT_INACTIVE'
+>;
 
 export type BookingValidation =
   | {
