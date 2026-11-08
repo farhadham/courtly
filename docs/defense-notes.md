@@ -56,12 +56,13 @@ files can't pollute each other. No mocks for domain rules.
 **One-liner:** "Pure rules are unit-tested; anything the database enforces is
 tested against a real database, and HTTP behaviour goes through the real app."
 
-## Frontend testing: logic only, not full UI
+## Frontend testing: logic only, never components
 
 **Decision:** The web app is tested at the logic layer only: slot selection
 (1 vs 2 hours, adjacency, fits before closing), the cancellation offer window,
-facility-time formatting, and error code → message mapping. There are no
-component/rendering tests and no browser E2E suite.
+facility-time formatting, error code → message mapping, and the admin price and
+day-grouping helpers. There are no component/rendering tests and no browser E2E
+suite, and none will be added: screens are not a test target.
 
 **Why:** Every business rule already has an owner. The API enforces duration,
 opening hours, future-only, overlap and the cancellation window, and those rules
@@ -72,13 +73,16 @@ layer's own job is presentation and wiring; that is checked by the manual smoke
 pass against the seed data.
 
 **Not a time shortcut:** this is a deliberate scope decision, not something
-skipped under time pressure. If a screen grows branching logic of its own,
-component tests with Testing Library would be added; today every screen reads
-one typed API and renders it.
+skipped under time pressure. When a screen grows logic of its own, that logic is
+extracted into a pure helper under `src/lib/` and unit-tested there — as
+`parsePriceToCents` and `groupBookingsByCourt` are for the admin screens.
+Loading, error and empty rendering, dialogs and toggles stay presentation and
+are checked by the manual smoke pass.
 
-**Trade-off:** rendering regressions, focus order and responsive layout are not
-caught automatically. Keyboard behaviour, focus visibility and the
-`AVAILABLE`/`TAKEN`/`PAST` distinction are part of the manual checklist.
+**Trade-off:** rendering regressions, focus order, dialog and toggle behaviour
+and responsive layout are not caught automatically. Keyboard behaviour, focus
+visibility, the `AVAILABLE`/`TAKEN`/`PAST` distinction and the admin
+create/edit/deactivate flow are part of the manual checklist.
 
 **One-liner:** "The rules are tested where they are enforced. Duplicating server
 rules in the browser would only add mocks, so the web layer is checked by hand."
