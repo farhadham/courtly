@@ -156,6 +156,12 @@ describe('bookings API', () => {
         'OUTSIDE_OPENING_HOURS',
       ],
       [
+        'a start off the hour grid',
+        { startAt: '2030-01-15T08:15:00+00:00' },
+        422,
+        'BOOKING_OFF_SLOT',
+      ],
+      [
         'two hours ending after closing',
         { startAt: '2030-01-15T22:00:00+00:00', durationHours: 2 },
         422,

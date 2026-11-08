@@ -9,6 +9,7 @@ import {
   courts,
 } from '@courtly/contracts';
 import type { Court, CourtRow } from '@courtly/contracts';
+import { requireAuthUser } from '../auth/middleware';
 import type { AppDatabase } from '../db/client';
 import {
   availabilityForDay,
@@ -66,7 +67,7 @@ export function createCourtsRouter({
 
     const filters: SQL[] = [];
 
-    if (!(parsed.data.includeInactive === 'true' && req.auth?.role === 'ADMIN')) {
+    if (!(parsed.data.includeInactive === 'true' && requireAuthUser(req).role === 'ADMIN')) {
       filters.push(eq(courts.isActive, true));
     }
 

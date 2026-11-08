@@ -1,6 +1,5 @@
-import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { USER_ROLES, users } from './schema';
+import { USER_ROLES } from './schema';
 
 /**
  * The authenticated principal returned by `POST /auth/login` and encoded in
@@ -22,9 +21,6 @@ export const loginResponseSchema = z.object({
   user: authUserSchema,
 });
 
-export const userRowSchema = createSelectSchema(users);
-
 export type AuthUser = z.infer<typeof authUserSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
-export type UserRow = z.infer<typeof userRowSchema>;

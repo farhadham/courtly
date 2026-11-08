@@ -49,7 +49,7 @@ Deactivating a court never deletes it and never deletes its bookings.
 
 ## Business rules
 
-1. **Duration.** A booking is exactly 1 or 2 consecutive hours. Nothing else is accepted.
+1. **Duration.** A booking is exactly 1 or 2 consecutive hours and starts on a slot boundary — a whole number of hours after the court's opening time. Nothing else is accepted.
 2. **Opening hours.** `start_at` must be at or after opening and `end_at` at or before closing, on that court's local day.
 3. **Future only.** A booking is rejected when `start_at <= now()`. The same boundary splits a user's history: `upcoming` means a start strictly after `now()`.
 4. **No overlap.** No two `CONFIRMED` bookings on the same court may overlap. Enforced by a PostgreSQL exclusion constraint, not by application code. Back-to-back is allowed: `[start, end)` bounds.
@@ -107,6 +107,7 @@ Codes are a closed enum, typed in `packages/contracts`:
 | `CANCELLATION_WINDOW_CLOSED` | 409    |
 | `BOOKING_ALREADY_CANCELLED`  | 409    |
 | `BOOKING_IN_PAST`            | 422    |
+| `BOOKING_OFF_SLOT`           | 422    |
 | `OUTSIDE_OPENING_HOURS`      | 422    |
 | `COURT_INACTIVE`             | 422    |
 

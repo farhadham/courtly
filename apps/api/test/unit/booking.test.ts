@@ -34,6 +34,17 @@ describe('validateBooking', () => {
     expect(result).toEqual({ ok: false, code: 'OUTSIDE_OPENING_HOURS' });
   });
 
+  it('rejects a start that is not on the hour grid', () => {
+    const result = validateBooking({
+      court,
+      startAt: new Date('2030-01-15T08:15:00Z'),
+      durationHours: 1,
+      now,
+    });
+
+    expect(result).toEqual({ ok: false, code: 'BOOKING_OFF_SLOT' });
+  });
+
   it('rejects a two-hour booking that ends after the court closes', () => {
     const result = validateBooking({
       court,
