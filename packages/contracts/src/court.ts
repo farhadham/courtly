@@ -1,10 +1,9 @@
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { timeOfDaySchema } from './primitives';
 import { courts } from './schema';
 
 export const courtRowSchema = createSelectSchema(courts);
-export const courtInsertSchema = createInsertSchema(courts);
 
 /**
  * A court as the API returns it. Times are normalised to `HH:MM`; the database

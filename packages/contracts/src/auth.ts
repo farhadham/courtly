@@ -1,4 +1,4 @@
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { USER_ROLES, users } from './schema';
 
@@ -23,7 +23,6 @@ export const loginResponseSchema = z.object({
 });
 
 export const userRowSchema = createSelectSchema(users);
-export const userInsertSchema = createInsertSchema(users);
 
 export type AuthUser = z.infer<typeof authUserSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;

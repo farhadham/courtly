@@ -1,9 +1,8 @@
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { BOOKING_STATUSES, bookings } from './schema';
 
 export const bookingRowSchema = createSelectSchema(bookings);
-export const bookingInsertSchema = createInsertSchema(bookings);
 
 /**
  * A booking as the API returns it: camelCase, with instants in the `+00:00`

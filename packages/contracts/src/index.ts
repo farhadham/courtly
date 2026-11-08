@@ -28,7 +28,7 @@ export { ERROR_CODES, apiErrorSchema } from './errors';
 export type { ApiErrorBody, ErrorCode } from './errors';
 
 export { authUserSchema, loginRequestSchema, loginResponseSchema } from './auth';
-export { userInsertSchema, userRowSchema } from './auth';
+export { userRowSchema } from './auth';
 export type { AuthUser, LoginRequest, LoginResponse, UserRow } from './auth';
 
 export { timeOfDaySchema } from './primitives';
@@ -36,7 +36,6 @@ export { timeOfDaySchema } from './primitives';
 export {
   courtCreateSchema,
   courtIdParamSchema,
-  courtInsertSchema,
   courtListQuerySchema,
   courtRowSchema,
   courtSchema,
@@ -46,7 +45,6 @@ export type { Court, CourtCreate, CourtListQuery, CourtRow, CourtUpdate } from '
 
 export {
   bookingCreateSchema,
-  bookingInsertSchema,
   bookingRowSchema,
   bookingSchema,
 } from './booking';
