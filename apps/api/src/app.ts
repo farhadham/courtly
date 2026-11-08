@@ -11,6 +11,7 @@ import { createHealthRouter } from './routes/health';
 export interface AppDependencies {
   db: AppDatabase;
   jwtSecret: string;
+  now?: () => Date;
 }
 
 /**
@@ -20,7 +21,7 @@ export interface AppDependencies {
  * middleware stack without a network port, and gives the server entry point a
  * single place to wire future routers.
  */
-export function createApp({ db, jwtSecret }: AppDependencies): Express {
+export function createApp({ db, jwtSecret, now }: AppDependencies): Express {
   const app = express();
 
   app.disable('x-powered-by');
@@ -33,7 +34,7 @@ export function createApp({ db, jwtSecret }: AppDependencies): Express {
   // Everything mounted below this line requires a valid token. Login is the
   // only public business route.
   app.use(requireAuth(jwtSecret));
-  app.use('/courts', createCourtsRouter({ db }));
+  app.use('/courts', createCourtsRouter({ db, now }));
   app.use('/admin', requireRole('ADMIN'), createAdminRouter({ db }));
 
   // Unknown routes answer in the error contract rather than Express's HTML

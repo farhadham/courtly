@@ -1,13 +1,26 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { Router } from 'express';
-import { courtIdParamSchema, courtListQuerySchema, courts } from '@courtly/contracts';
+import {
+  availabilityQuerySchema,
+  bookings,
+  courtIdParamSchema,
+  courtListQuerySchema,
+  courts,
+} from '@courtly/contracts';
 import type { Court, CourtRow } from '@courtly/contracts';
 import type { AppDatabase } from '../db/client';
+import {
+  availabilityForDay,
+  courtOpeningWindow,
+  FACILITY_TIME_ZONE,
+  localDateFromIso,
+} from '../domain/availability';
 import { ApiError } from '../http/errors';
 
 export interface CourtsRouterDependencies {
   db: AppDatabase;
+  now?: () => Date;
 }
 
 /**
@@ -27,6 +40,7 @@ export function toCourtResponse(court: CourtRow): Court {
     opensAt: toTimeOfDay(court.opensAt),
     closesAt: toTimeOfDay(court.closesAt),
     isActive: court.isActive,
+    timeZone: FACILITY_TIME_ZONE,
   };
 }
 
@@ -34,7 +48,10 @@ export function toCourtResponse(court: CourtRow): Court {
  * Court browsing for authenticated users. Inactive courts are excluded here;
  * the admin router has its own view that can include them.
  */
-export function createCourtsRouter({ db }: CourtsRouterDependencies): Router {
+export function createCourtsRouter({
+  db,
+  now = () => new Date(),
+}: CourtsRouterDependencies): Router {
   const router = Router();
 
   router.get('/', async (req, res) => {
@@ -63,6 +80,55 @@ export function createCourtsRouter({ db }: CourtsRouterDependencies): Router {
       .orderBy(courts.name);
 
     res.json(rows.map(toCourtResponse));
+  });
+
+  router.get('/:id/availability', async (req, res) => {
+    const parsedParams = courtIdParamSchema.safeParse(req.params);
+
+    if (!parsedParams.success) {
+      throw new ApiError(404, 'NOT_FOUND', 'Court not found');
+    }
+
+    const parsedQuery = availabilityQuerySchema.safeParse(req.query);
+    const date = parsedQuery.success ? localDateFromIso(parsedQuery.data.date) : null;
+
+    if (!parsedQuery.success || !date) {
+      throw new ApiError(400, 'VALIDATION_FAILED', 'Invalid availability query', {
+        issues: parsedQuery.success ? [] : parsedQuery.error.issues,
+      });
+    }
+
+    const [court] = await db
+      .select()
+      .from(courts)
+      .where(eq(courts.id, parsedParams.data.id))
+      .limit(1);
+
+    if (!court) {
+      throw new ApiError(404, 'NOT_FOUND', 'Court not found');
+    }
+
+    const { opensAt, closesAt } = courtOpeningWindow(court, date);
+    const activeBookings = await db
+      .select({ startAt: bookings.startAt, endAt: bookings.endAt })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.courtId, court.id),
+          eq(bookings.status, 'CONFIRMED'),
+          lt(bookings.startAt, closesAt),
+          gt(bookings.endAt, opensAt),
+        ),
+      );
+
+    res.json(
+      availabilityForDay({
+        court,
+        date,
+        bookings: activeBookings,
+        now: now(),
+      }),
+    );
   });
 
   router.get('/:id', async (req, res) => {
