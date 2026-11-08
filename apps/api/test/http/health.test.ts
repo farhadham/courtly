@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import type { Pool } from 'pg';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { HealthResponse } from '@courtly/contracts';
+import type { ApiData, HealthResponse } from '@courtly/contracts';
 import { createApp } from '../../src/app';
 import { signAuthToken } from '../../src/auth/tokens';
 import { createTestPool } from '../db/test-database';
@@ -23,10 +23,11 @@ describe('GET /health', () => {
 
   it('reports the API as healthy', async () => {
     const response = await request(app).get('/health').expect(200);
-    const body = response.body as HealthResponse;
+    const envelope = response.body as ApiData<HealthResponse>;
 
-    expect(body).toMatchObject({ status: 'ok' });
-    expect(body.uptimeSeconds).toBeTypeOf('number');
+    expect(Object.keys(envelope)).toEqual(['data']);
+    expect(envelope.data).toMatchObject({ status: 'ok' });
+    expect(envelope.data.uptimeSeconds).toBeTypeOf('number');
   });
 
   it('answers authenticated unknown routes in the error contract', async () => {

@@ -6,6 +6,7 @@ import { loginResponseSchema } from '@courtly/contracts';
 import { createApp } from '../../src/app';
 import { seedDatabase } from '../../src/db/seed';
 import { createTestPool, testDatabaseUrl } from '../db/test-database';
+import { payload } from './payload';
 
 const jwtSecret = 'test-secret';
 let pool: Pool;
@@ -28,7 +29,7 @@ describe('authentication', () => {
       .post('/auth/login')
       .send({ email: 'user@courtly.test', password: 'courtly123' })
       .expect(200);
-    const body = loginResponseSchema.parse(response.body);
+    const body = loginResponseSchema.parse(payload(response));
 
     expect(body).toMatchObject({
       user: {
@@ -72,7 +73,7 @@ describe('authentication', () => {
       .post('/auth/login')
       .send({ email: 'user@courtly.test', password: 'courtly123' })
       .expect(200);
-    const { token } = loginResponseSchema.parse(login.body);
+    const { token } = loginResponseSchema.parse(payload(login));
 
     const response = await request(app)
       .get('/admin/courts')
@@ -93,7 +94,7 @@ describe('authentication', () => {
       .post('/auth/login')
       .send({ email: 'admin@courtly.test', password: 'courtly123' })
       .expect(200);
-    const { token, user } = loginResponseSchema.parse(login.body);
+    const { token, user } = loginResponseSchema.parse(payload(login));
 
     expect(user.role).toBe('ADMIN');
 
