@@ -2,7 +2,8 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import type { Pool } from 'pg';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { apiErrorSchema, bookingSchema } from '@courtly/contracts';
+import { apiErrorSchema, availabilityResponseSchema, bookingSchema } from '@courtly/contracts';
+import type { Booking } from '@courtly/contracts';
 import { createApp } from '../../src/app';
 import { signAuthToken } from '../../src/auth/tokens';
 import { seedDatabase } from '../../src/db/seed';
@@ -11,12 +12,14 @@ import { payload } from './payload';
 
 const jwtSecret = 'test-secret';
 const USER_ID = '11111111-1111-4111-8111-111111111101';
+const OTHER_USER_ID = '11111111-1111-4111-8111-111111111102';
 const ADMIN_ID = '11111111-1111-4111-8111-111111111103';
 const PADEL_1 = '22222222-2222-4222-8222-222222222201';
 
 let pool: Pool;
 let app: ReturnType<typeof createApp>;
 let userToken: string;
+let otherUserToken: string;
 let adminToken: string;
 let now: Date;
 
@@ -24,6 +27,7 @@ describe('bookings API', () => {
   beforeAll(() => {
     pool = createTestPool();
     userToken = signAuthToken({ sub: USER_ID, role: 'USER' }, jwtSecret);
+    otherUserToken = signAuthToken({ sub: OTHER_USER_ID, role: 'USER' }, jwtSecret);
     adminToken = signAuthToken({ sub: ADMIN_ID, role: 'ADMIN' }, jwtSecret);
   });
 
@@ -252,6 +256,137 @@ describe('bookings API', () => {
         .expect(201);
 
       expect(bookingSchema.parse(payload(response)).priceCents).toBe(4_000);
+    });
+  });
+
+  describe('POST /bookings/:id/cancel', () => {
+    async function createBooking(): Promise<Booking> {
+      const response = await request(app)
+        .post('/bookings')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          courtId: PADEL_1,
+          startAt: '2030-01-15T09:00:00+00:00',
+          durationHours: 1,
+        })
+        .expect(201);
+
+      return bookingSchema.parse(payload(response));
+    }
+
+    it('cancels the owner’s booking more than two hours before the start', async () => {
+      const booking = await createBooking();
+
+      const response = await request(app)
+        .post(`/bookings/${booking.id}/cancel`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(200);
+
+      expect(bookingSchema.parse(payload(response))).toMatchObject({
+        id: booking.id,
+        status: 'CANCELLED',
+      });
+
+      const retained = await pool.query<{ status: string }>(
+        'select status from bookings where id = $1',
+        [booking.id],
+      );
+      expect(retained.rows).toEqual([{ status: 'CANCELLED' }]);
+    });
+
+    it('cancels at exactly two hours before the start', async () => {
+      const booking = await createBooking();
+      now = new Date('2030-01-15T07:00:00Z');
+
+      const response = await request(app)
+        .post(`/bookings/${booking.id}/cancel`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(200);
+
+      expect(bookingSchema.parse(payload(response)).status).toBe('CANCELLED');
+    });
+
+    it('refuses at one hour fifty-nine minutes before the start', async () => {
+      const booking = await createBooking();
+      now = new Date('2030-01-15T07:01:00Z');
+
+      const response = await request(app)
+        .post(`/bookings/${booking.id}/cancel`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(409);
+
+      expect(apiErrorSchema.parse(response.body).error.code).toBe('CANCELLATION_WINDOW_CLOSED');
+    });
+
+    it('forbids another user from cancelling the booking', async () => {
+      const booking = await createBooking();
+
+      const response = await request(app)
+        .post(`/bookings/${booking.id}/cancel`)
+        .set('Authorization', `Bearer ${otherUserToken}`)
+        .expect(403);
+
+      expect(apiErrorSchema.parse(response.body).error.code).toBe('FORBIDDEN');
+    });
+
+    it('forbids an admin from cancelling', async () => {
+      const booking = await createBooking();
+
+      const response = await request(app)
+        .post(`/bookings/${booking.id}/cancel`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(403);
+
+      expect(apiErrorSchema.parse(response.body).error.code).toBe('FORBIDDEN');
+    });
+
+    it('answers an unknown booking with NOT_FOUND', async () => {
+      const response = await request(app)
+        .post('/bookings/00000000-0000-4000-8000-000000000000/cancel')
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(404);
+
+      expect(apiErrorSchema.parse(response.body).error.code).toBe('NOT_FOUND');
+    });
+
+    it('refuses to cancel an already cancelled booking', async () => {
+      const booking = await createBooking();
+
+      await request(app)
+        .post(`/bookings/${booking.id}/cancel`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(200);
+
+      const response = await request(app)
+        .post(`/bookings/${booking.id}/cancel`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(409);
+
+      expect(apiErrorSchema.parse(response.body).error.code).toBe('BOOKING_ALREADY_CANCELLED');
+    });
+
+    it('returns the cancelled booking’s slot to availability', async () => {
+      const booking = await createBooking();
+      const slotAt = async (): Promise<string | undefined> => {
+        const response = await request(app)
+          .get(`/courts/${PADEL_1}/availability`)
+          .query({ date: '2030-01-15' })
+          .set('Authorization', `Bearer ${userToken}`)
+          .expect(200);
+
+        return availabilityResponseSchema
+          .parse(payload(response))
+          .find((slot) => slot.startsAt === '2030-01-15T09:00:00+00:00')?.status;
+      };
+
+      expect(await slotAt()).toBe('TAKEN');
+
+      await request(app)
+        .post(`/bookings/${booking.id}/cancel`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(200);
+
+      expect(await slotAt()).toBe('AVAILABLE');
     });
   });
 });

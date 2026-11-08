@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { Router } from 'express';
-import { bookingCreateSchema, bookings, courts } from '@courtly/contracts';
+import { bookingCreateSchema, bookingIdParamSchema, bookings, courts } from '@courtly/contracts';
 import type { Booking, BookingRow } from '@courtly/contracts';
 import { requireRole } from '../auth/middleware';
 import type { AppDatabase } from '../db/client';
@@ -8,6 +8,8 @@ import { isExclusionViolation } from '../db/errors';
 import { formatInstant } from '../domain/availability';
 import { validateBooking } from '../domain/booking';
 import type { BookingRejection } from '../domain/booking';
+import { validateCancellation } from '../domain/cancellation';
+import type { CancellationRejection } from '../domain/cancellation';
 import { ApiError } from '../http/errors';
 import { data } from '../http/respond';
 
@@ -20,6 +22,18 @@ const REJECTION_MESSAGES: Record<BookingRejection, string> = {
   BOOKING_IN_PAST: 'A booking cannot start at or before the current time',
   OUTSIDE_OPENING_HOURS: 'The booking must fit inside the court opening hours',
   COURT_INACTIVE: 'This court is not accepting new bookings',
+};
+
+const CANCELLATION_STATUS: Record<CancellationRejection, number> = {
+  FORBIDDEN: 403,
+  BOOKING_ALREADY_CANCELLED: 409,
+  CANCELLATION_WINDOW_CLOSED: 409,
+};
+
+const CANCELLATION_MESSAGES: Record<CancellationRejection, string> = {
+  FORBIDDEN: 'Only the booking owner may cancel it',
+  BOOKING_ALREADY_CANCELLED: 'This booking is already cancelled',
+  CANCELLATION_WINDOW_CLOSED: 'A booking can no longer be cancelled inside its two-hour window',
 };
 
 export function toBookingResponse(booking: BookingRow): Booking {
@@ -107,6 +121,60 @@ export function createBookingsRouter({
     }
 
     res.status(201).json(data(toBookingResponse(booking)));
+  });
+
+  /**
+   * Cancellation is a state transition rather than a delete: the row survives
+   * with `status = 'CANCELLED'`, which is what frees its slots and keeps it out
+   * of revenue. Only a USER reaches this handler; admins are refused at the
+   * role guard, and the domain function refuses anyone who is not the owner.
+   */
+  router.post('/:id/cancel', requireRole('USER'), async (req, res) => {
+    const parsedParams = bookingIdParamSchema.safeParse(req.params);
+
+    if (!parsedParams.success) {
+      throw new ApiError(404, 'NOT_FOUND', 'Booking not found');
+    }
+
+    const userId = req.auth?.sub;
+
+    if (!userId) {
+      throw new ApiError(401, 'UNAUTHORIZED', 'Authentication required');
+    }
+
+    const [booking] = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, parsedParams.data.id))
+      .limit(1);
+
+    if (!booking) {
+      throw new ApiError(404, 'NOT_FOUND', 'Booking not found');
+    }
+
+    const validated = validateCancellation({ booking, userId, now: now() });
+
+    if (!validated.ok) {
+      throw new ApiError(
+        CANCELLATION_STATUS[validated.code],
+        validated.code,
+        CANCELLATION_MESSAGES[validated.code],
+      );
+    }
+
+    // The status predicate makes the transition idempotent under concurrency:
+    // a second cancellation racing this one updates no rows and gets 409.
+    const [cancelled] = await db
+      .update(bookings)
+      .set({ status: 'CANCELLED' })
+      .where(and(eq(bookings.id, booking.id), eq(bookings.status, 'CONFIRMED')))
+      .returning();
+
+    if (!cancelled) {
+      throw new ApiError(409, 'BOOKING_ALREADY_CANCELLED', 'This booking is already cancelled');
+    }
+
+    res.json(data(toBookingResponse(cancelled)));
   });
 
   return router;
