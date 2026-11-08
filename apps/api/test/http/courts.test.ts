@@ -51,6 +51,7 @@ describe('courts API', () => {
         opensAt: '08:00',
         closesAt: '23:00',
         isActive: true,
+        timeZone: 'Europe/Lisbon',
       });
     });
 

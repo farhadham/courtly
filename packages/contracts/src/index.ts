@@ -107,6 +107,9 @@ export const courtSchema = z.object({
   opensAt: timeOfDaySchema,
   closesAt: timeOfDaySchema,
   isActive: z.boolean(),
+  // IANA zone the court's opening hours are expressed in, so clients format
+  // slot instants in the facility's clock rather than the viewer's.
+  timeZone: z.string().min(1),
 });
 
 export type Court = z.infer<typeof courtSchema>;
@@ -166,3 +169,25 @@ export type UserRow = z.infer<typeof userRowSchema>;
 export type CourtRow = z.infer<typeof courtRowSchema>;
 export type BookingRow = z.infer<typeof bookingRowSchema>;
 export type BookingCreate = z.infer<typeof bookingCreateSchema>;
+
+export const AVAILABILITY_STATUSES = ['AVAILABLE', 'TAKEN', 'PAST'] as const;
+
+export type AvailabilityStatus = (typeof AVAILABILITY_STATUSES)[number];
+
+/**
+ * Query accepted by `GET /courts/:id/availability`. The date is a calendar day
+ * in the facility's local time zone, not a UTC day.
+ */
+export const availabilityQuerySchema = z.object({
+  date: z.iso.date(),
+});
+
+export const availabilitySlotSchema = z.object({
+  startsAt: z.iso.datetime({ offset: true }),
+  status: z.enum(AVAILABILITY_STATUSES),
+});
+
+export const availabilityResponseSchema = z.array(availabilitySlotSchema);
+
+export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
+export type AvailabilitySlot = z.infer<typeof availabilitySlotSchema>;
