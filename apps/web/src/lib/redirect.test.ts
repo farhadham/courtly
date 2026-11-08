@@ -15,4 +15,9 @@ describe('post-login redirect', () => {
     expect(safeRedirect('https://evil.example')).toBe('/');
     expect(safeRedirect('//evil.example')).toBe('/');
   });
+
+  it('refuses backslash paths that browsers treat as protocol-relative', () => {
+    expect(safeRedirect('/\\evil.example')).toBe('/');
+    expect(safeRedirect('/\\/evil.example')).toBe('/');
+  });
 });

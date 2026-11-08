@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import type { Booking, BookingScope } from '@courtly/contracts';
 import { CalendarDaysIcon, ClockIcon, HistoryIcon, InfoIcon } from 'lucide-react';
 import { z } from 'zod';
@@ -33,7 +33,7 @@ import { formatDuration, formatPrice } from '@/lib/format';
 import { useIsAdmin } from '@/lib/use-session';
 import { cn } from '@/lib/utils';
 import { myBookingsQueryOptions, useCancelBooking } from '@/queries/bookings';
-import { courtsQueryOptions } from '@/queries/courts';
+import { courtQueryOptions, courtsQueryOptions } from '@/queries/courts';
 
 const bookingsSearchSchema = z.object({
   scope: z.enum(['upcoming', 'past']).optional(),
@@ -77,6 +77,30 @@ function BookingsPage() {
     () => new Map((courts.data ?? []).map((court) => [court.id, court])),
     [courts.data],
   );
+
+  /**
+   * The public court list excludes deactivated courts, but their bookings stay
+   * in the owner's history. Resolve those few courts through the detail route,
+   * which still returns a deactivated court, so history keeps the real name.
+   */
+  const missingCourtIds = useMemo(() => {
+    const known = new Set(courtsById.keys());
+    const bookingCourtIds = (bookings.data ?? []).map((booking) => booking.courtId);
+
+    return [...new Set(bookingCourtIds)].filter((courtId) => !known.has(courtId));
+  }, [bookings.data, courtsById]);
+
+  const missingCourts = useQueries({
+    queries: missingCourtIds.map((courtId) => courtQueryOptions(courtId)),
+  });
+
+  const resolvedCourtsById = new Map(courtsById);
+
+  for (const query of missingCourts) {
+    if (query.data) {
+      resolvedCourtsById.set(query.data.id, query.data);
+    }
+  }
 
   // The offer window is a UI hint; the API decides the actual cancellation.
   const now = new Date();
@@ -158,7 +182,7 @@ function BookingsPage() {
       {bookings.isSuccess && bookings.data.length > 0 ? (
         <ul className="flex flex-col gap-3">
           {bookings.data.map((booking) => {
-            const court = courtsById.get(booking.courtId);
+            const court = resolvedCourtsById.get(booking.courtId);
             const timeZone = court?.timeZone ?? DEFAULT_FACILITY_TIME_ZONE;
             const cancelling = cancelBooking.isPending && pendingCancel?.id === booking.id;
             const cancellationOffer = cancellationOfferFor(booking, now, isAdmin);
@@ -265,9 +289,10 @@ function BookingsPage() {
             <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
             <AlertDialogDescription>
               {pendingCancel
-                ? `${courtsById.get(pendingCancel.courtId)?.name ?? 'This court'} on ${formatFacilityDate(
+                ? `${resolvedCourtsById.get(pendingCancel.courtId)?.name ?? 'This court'} on ${formatFacilityDate(
                     pendingCancel.startAt,
-                    courtsById.get(pendingCancel.courtId)?.timeZone ?? DEFAULT_FACILITY_TIME_ZONE,
+                    resolvedCourtsById.get(pendingCancel.courtId)?.timeZone ??
+                      DEFAULT_FACILITY_TIME_ZONE,
                   )} will be released for other users.`
                 : null}
             </AlertDialogDescription>

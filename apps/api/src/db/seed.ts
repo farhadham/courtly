@@ -4,6 +4,7 @@ import { bookings, courts, users } from '@courtly/contracts';
 import type { BookingStatus, UserRole } from '@courtly/contracts';
 import { createDatabase } from './client';
 import { databaseUrl } from './config';
+import { isExclusionViolation, isUniqueViolation } from './errors';
 import { HOUR_MS } from '../domain/time';
 
 const PASSWORD = 'courtly123';
@@ -183,36 +184,65 @@ export async function seedDatabase(connectionString = databaseUrl()): Promise<vo
         },
       });
 
-    await db
-      .insert(courts)
-      .values(courtRows)
-      .onConflictDoUpdate({
-        target: courts.id,
-        set: {
-          name: sql`excluded.name`,
-          sportType: sql`excluded.sport_type`,
-          hourlyPriceCents: sql`excluded.hourly_price_cents`,
-          opensAt: sql`excluded.opens_at`,
-          closesAt: sql`excluded.closes_at`,
-          isActive: sql`excluded.is_active`,
-        },
-      });
+    // Seeding must never stop the stack from starting just because the demo
+    // data was used between runs. Each row is upserted on its own so one
+    // conflict does not discard the rest of the fixture:
+    // - A court name the admin has since reused is left alone.
+    // - A freed booking slot that a user has rebooked is left to the user.
+    for (const courtRow of courtRows) {
+      try {
+        await db
+          .insert(courts)
+          .values(courtRow)
+          .onConflictDoUpdate({
+            target: courts.id,
+            set: {
+              name: sql`excluded.name`,
+              sportType: sql`excluded.sport_type`,
+              hourlyPriceCents: sql`excluded.hourly_price_cents`,
+              opensAt: sql`excluded.opens_at`,
+              closesAt: sql`excluded.closes_at`,
+              isActive: sql`excluded.is_active`,
+            },
+          });
+      } catch (error) {
+        if (isUniqueViolation(error, 'courts_name_unique')) {
+          continue;
+        }
 
-    await db
-      .insert(bookings)
-      .values(bookingFixtures(new Date()))
-      .onConflictDoUpdate({
-        target: bookings.id,
-        set: {
-          courtId: sql`excluded.court_id`,
-          userId: sql`excluded.user_id`,
-          startAt: sql`excluded.start_at`,
-          endAt: sql`excluded.end_at`,
-          durationHours: sql`excluded.duration_hours`,
-          priceCents: sql`excluded.price_cents`,
-          status: sql`excluded.status`,
-        },
-      });
+        throw error;
+      }
+    }
+
+    const now = new Date();
+
+    for (const fixture of bookingFixtures(now)) {
+      try {
+        await db
+          .insert(bookings)
+          .values(fixture)
+          .onConflictDoUpdate({
+            target: bookings.id,
+            set: {
+              courtId: sql`excluded.court_id`,
+              userId: sql`excluded.user_id`,
+              startAt: sql`excluded.start_at`,
+              endAt: sql`excluded.end_at`,
+              durationHours: sql`excluded.duration_hours`,
+              priceCents: sql`excluded.price_cents`,
+              status: sql`excluded.status`,
+            },
+          });
+      } catch (error) {
+        // The slot is held by a user's confirmed booking. Restoring the seed
+        // row would violate the exclusion constraint and take the slot away.
+        if (isExclusionViolation(error)) {
+          continue;
+        }
+
+        throw error;
+      }
+    }
   } finally {
     await pool.end();
   }

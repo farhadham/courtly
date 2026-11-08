@@ -10,6 +10,7 @@ import {
   MapPinIcon,
   MousePointerClickIcon,
   ShieldIcon,
+  ShieldXIcon,
   XIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -109,6 +110,7 @@ function CourtDetailPage() {
   }
 
   const court = courtQuery.data;
+  const readOnly = isAdmin || !court.isActive;
   const selectionPrice = selection ? selectionPriceCents(court.hourlyPriceCents, selection) : 0;
   const { bar } = sportStyle(court.sportType);
   const parsedDate = parseIsoDate(date);
@@ -207,7 +209,15 @@ function CourtDetailPage() {
         </div>
       </section>
 
-      {isAdmin ? (
+      {!court.isActive ? (
+        <Alert className="border-border bg-muted/40">
+          <ShieldXIcon aria-hidden="true" />
+          <AlertTitle>Court deactivated</AlertTitle>
+          <AlertDescription>
+            This court is not accepting new bookings. Existing bookings are unchanged.
+          </AlertDescription>
+        </Alert>
+      ) : isAdmin ? (
         <Alert className="border-primary/20 bg-primary/5">
           <ShieldIcon aria-hidden="true" />
           <AlertTitle>Read-only admin view</AlertTitle>
@@ -227,7 +237,7 @@ function CourtDetailPage() {
               </h2>
               <p className="text-sm text-muted-foreground">
                 {dateLabel}
-                {availabilityQuery.isSuccess ? (
+                {availabilityQuery.isSuccess && court.isActive ? (
                   <>
                     {' '}
                     &middot; {availableCount} {availableCount === 1 ? 'slot' : 'slots'} free
@@ -267,13 +277,13 @@ function CourtDetailPage() {
             slots={slots}
             timeZone={court.timeZone}
             selection={selection}
-            readOnly={isAdmin}
+            readOnly={readOnly}
             onToggle={handleToggle}
           />
         ) : null}
       </section>
 
-      {!isAdmin ? (
+      {!readOnly ? (
         <section aria-label="Selected slot">
           {selection && windowRange ? (
             <Card className="sticky bottom-4 z-20 gap-0 border-primary/20 bg-card/95 py-0 shadow-lg shadow-primary/10 backdrop-blur">
