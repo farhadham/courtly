@@ -66,10 +66,10 @@ function CourtsPage() {
       {isAdmin ? (
         <Alert>
           <ShieldIcon aria-hidden="true" />
-          <AlertTitle>Read-only admin view</AlertTitle>
+          <AlertTitle>Admin view</AlertTitle>
           <AlertDescription>
-            Admin tools for creating and editing courts arrive in a later phase. Booking actions are
-            hidden for admin accounts.
+            Manage courts and review the day&rsquo;s bookings from the admin screens. Booking
+            actions are hidden for admin accounts.
           </AlertDescription>
         </Alert>
       ) : null}

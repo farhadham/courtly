@@ -17,11 +17,12 @@ export function DatePicker({
   onChange,
 }: {
   value: string;
-  minDate: string;
+  /** Omitted when any day is valid, as on the admin day view. */
+  minDate?: string;
   onChange: (value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const selected = parseIsoDate(value) ?? parseIsoDate(minDate) ?? undefined;
+  const selected = parseIsoDate(value) ?? (minDate ? parseIsoDate(minDate) : null) ?? undefined;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -36,7 +37,7 @@ export function DatePicker({
           mode="single"
           selected={selected}
           autoFocus
-          disabled={(day) => formatIsoDate(day) < minDate}
+          disabled={(day) => (minDate ? formatIsoDate(day) < minDate : false)}
           onSelect={(day) => {
             if (!day) {
               return;

@@ -41,6 +41,25 @@ export function AppHeader() {
           <Link to="/bookings" className={NAV_LINK} activeProps={{ className: ACTIVE_LINK }}>
             My bookings
           </Link>
+          {isAdmin ? (
+            <>
+              <Link
+                to="/admin"
+                className={NAV_LINK}
+                activeOptions={{ exact: true }}
+                activeProps={{ className: ACTIVE_LINK }}
+              >
+                Day view
+              </Link>
+              <Link
+                to="/admin/courts"
+                className={NAV_LINK}
+                activeProps={{ className: ACTIVE_LINK }}
+              >
+                Manage courts
+              </Link>
+            </>
+          ) : null}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
