@@ -1,6 +1,12 @@
-import { and, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, lte, or } from 'drizzle-orm';
 import { Router } from 'express';
-import { bookingCreateSchema, bookingIdParamSchema, bookings, courts } from '@courtly/contracts';
+import {
+  bookingCreateSchema,
+  bookingIdParamSchema,
+  bookings,
+  courts,
+  myBookingsQuerySchema,
+} from '@courtly/contracts';
 import type { Booking, BookingRow } from '@courtly/contracts';
 import { requireRole } from '../auth/middleware';
 import type { AppDatabase } from '../db/client';
@@ -60,6 +66,43 @@ export function createBookingsRouter({
   now = () => new Date(),
 }: BookingsRouterDependencies): Router {
   const router = Router();
+
+  /**
+   * The caller's own history, split around the injected clock. Ownership comes
+   * from the token rather than the query string, so another user's bookings are
+   * unreachable by construction. `upcoming` follows the booking rule that a
+   * start at or before `now()` is no longer future (`start_at <= now()` is
+   * rejected on creation), so only confirmed rows strictly after `now()` count.
+   * Cancelled rows stay visible as history, never as plans.
+   */
+  router.get('/me', async (req, res) => {
+    const parsed = myBookingsQuerySchema.safeParse(req.query);
+
+    if (!parsed.success) {
+      throw new ApiError(400, 'VALIDATION_FAILED', 'Invalid booking scope', {
+        issues: parsed.error.issues,
+      });
+    }
+
+    const userId = req.auth?.sub;
+
+    if (!userId) {
+      throw new ApiError(401, 'UNAUTHORIZED', 'Authentication required');
+    }
+
+    const isUpcoming = parsed.data.scope === 'upcoming';
+    const instant = now();
+    const scope = isUpcoming
+      ? and(gt(bookings.startAt, instant), eq(bookings.status, 'CONFIRMED'))
+      : or(lte(bookings.startAt, instant), eq(bookings.status, 'CANCELLED'));
+    const rows = await db
+      .select()
+      .from(bookings)
+      .where(and(eq(bookings.userId, userId), scope))
+      .orderBy(isUpcoming ? asc(bookings.startAt) : desc(bookings.startAt));
+
+    res.json(data(rows.map(toBookingResponse)));
+  });
 
   router.post('/', requireRole('USER'), async (req, res) => {
     const parsed = bookingCreateSchema.safeParse(req.body);

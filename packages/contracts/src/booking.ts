@@ -6,6 +6,23 @@ export const bookingRowSchema = createSelectSchema(bookings);
 
 export const bookingIdParamSchema = z.object({ id: z.uuid() });
 
+export const BOOKING_SCOPES = ['upcoming', 'past'] as const;
+export type BookingScope = (typeof BOOKING_SCOPES)[number];
+
+/**
+ * Query accepted by `GET /bookings/me`. `upcoming` is a confirmed booking that
+ * starts strictly after `now()`; `past` is everything else — bookings whose
+ * start has arrived, plus cancelled bookings.
+ */
+export const myBookingsQuerySchema = z.object({
+  scope: z.enum(BOOKING_SCOPES),
+});
+
+/** Query accepted by `GET /admin/bookings`: one Lisbon calendar day. */
+export const adminBookingsQuerySchema = z.object({
+  date: z.iso.date(),
+});
+
 /**
  * A booking as the API returns it: camelCase, with instants in the `+00:00`
  * form the availability endpoint uses. `priceCents` is the value snapshotted
@@ -21,6 +38,16 @@ export const bookingSchema = z.object({
   priceCents: z.number().int().nonnegative(),
   status: z.enum(BOOKING_STATUSES),
   createdAt: z.iso.datetime({ offset: true }),
+});
+
+/**
+ * The admin day view payload: every booking that starts on the requested
+ * Lisbon day, plus the day's revenue. Revenue is summed from the snapshotted
+ * `priceCents` of non-cancelled bookings (ADR-0002).
+ */
+export const adminBookingsResponseSchema = z.object({
+  bookings: z.array(bookingSchema),
+  totalRevenueCents: z.number().int().nonnegative(),
 });
 
 /**

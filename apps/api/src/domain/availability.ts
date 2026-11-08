@@ -138,6 +138,23 @@ export function courtOpeningWindow(
   };
 }
 
+/**
+ * The UTC instants bounding one local calendar day: `[start, end)`. The next
+ * day is derived on the calendar before converting, so a DST day is 23 or 25
+ * hours long rather than a fixed 24.
+ */
+export function localDayWindow(date: LocalDate): { startsAt: Date; endsAt: Date } {
+  const next = new Date(Date.UTC(date.year, date.month - 1, date.day + 1));
+
+  return {
+    startsAt: zonedTimeToUtc(date, 0),
+    endsAt: zonedTimeToUtc(
+      { year: next.getUTCFullYear(), month: next.getUTCMonth() + 1, day: next.getUTCDate() },
+      0,
+    ),
+  };
+}
+
 /** Formats an instant in the `+00:00` ISO form the spec uses. */
 export function formatInstant(instant: Date): string {
   return instant.toISOString().replace(/\.\d{3}Z$/, '+00:00');
