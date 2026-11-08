@@ -44,8 +44,13 @@ export {
 } from './court';
 export type { Court, CourtCreate, CourtListQuery, CourtRow, CourtUpdate } from './court';
 
-export { bookingCreateSchema, bookingInsertSchema, bookingRowSchema } from './booking';
-export type { BookingCreate, BookingRow } from './booking';
+export {
+  bookingCreateSchema,
+  bookingInsertSchema,
+  bookingRowSchema,
+  bookingSchema,
+} from './booking';
+export type { Booking, BookingCreate, BookingRow } from './booking';
 
 export {
   AVAILABILITY_STATUSES,
