@@ -7,6 +7,7 @@ import { z } from 'zod';
 export const ERROR_CODES = [
   'VALIDATION_FAILED',
   'UNAUTHORIZED',
+  'INVALID_CREDENTIALS',
   'FORBIDDEN',
   'NOT_FOUND',
   'SLOT_TAKEN',

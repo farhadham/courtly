@@ -83,4 +83,28 @@ caught automatically. Keyboard behaviour, focus visibility and the
 **One-liner:** "The rules are tested where they are enforced. Duplicating server
 rules in the browser would only add mocks, so the web layer is checked by hand."
 
+## Frontend: official agent skills only, gaps recorded
+
+**Decision:** Install only the skills a library vendor ships, and record the
+two that do not exist yet instead of substituting a community file.
+
+| Tool           | Source                                                                 | Status                                                            |
+| -------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| shadcn/ui      | `npx skills add shadcn/ui -a opencode`                                 | Installed under `.agents/skills/` (OpenCode reads that directory) |
+| TanStack Query | Official Intent skill not published yet (TanStack/query#10810, #10879) | Gap — Query usage is kept in `src/queries/`                       |
+| Tailwind CSS   | No official skill (tailwindlabs/tailwindcss#19594)                     | Gap — Tailwind v4 docs used directly                              |
+
+**Why:** a community skill is unversioned advice from outside the library, so
+it can drift from the installed version without any update path. A missing
+skill is safer than a wrong one, and writing the gap down keeps its absence
+from looking like an oversight.
+
+**Trade-off:** Query and Tailwind guidance is not versioned with the dependency.
+That is cheap here: Query usage is concentrated in `src/queries/`, and Tailwind
+v4 is configured once in `src/index.css`.
+
+**One-liner:** "I install vendor-shipped skills only; Query and Tailwind have
+no official skill yet, so I documented the gap instead of importing unofficial
+rules."
+
 <!-- Add more defense notes below. -->

@@ -103,6 +103,7 @@ Codes are a closed enum, typed in `packages/contracts`:
 | ---------------------------- | ------ |
 | `VALIDATION_FAILED`          | 400    |
 | `UNAUTHORIZED`               | 401    |
+| `INVALID_CREDENTIALS`        | 401    |
 | `FORBIDDEN`                  | 403    |
 | `NOT_FOUND`                  | 404    |
 | `SLOT_TAKEN`                 | 409    |
@@ -113,6 +114,8 @@ Codes are a closed enum, typed in `packages/contracts`:
 | `BOOKING_OFF_SLOT`           | 422    |
 | `OUTSIDE_OPENING_HOURS`      | 422    |
 | `COURT_INACTIVE`             | 422    |
+
+`UNAUTHORIZED` means the session is missing, invalid or expired: the client clears it and returns to login. `INVALID_CREDENTIALS` is login-only and means the email/password pair was rejected; it never invalidates a session.
 
 `23P01` (exclusion violation) maps to `SLOT_TAKEN` in exactly one place.
 

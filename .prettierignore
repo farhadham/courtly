@@ -3,5 +3,7 @@ dist/
 coverage/
 package-lock.json
 apps/api/drizzle/
+apps/web/src/routeTree.gen.ts
 .opencode/
+.agents/
 *.log

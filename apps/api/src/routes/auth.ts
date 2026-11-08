@@ -33,7 +33,7 @@ export function createAuthRouter({ db, jwtSecret }: AuthRouterDependencies): Rou
     const [user] = await db.select().from(users).where(eq(users.email, parsed.data.email)).limit(1);
 
     if (!user || !(await compare(parsed.data.password, user.passwordHash))) {
-      throw new ApiError(401, 'UNAUTHORIZED', 'Invalid email or password');
+      throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
     }
 
     const body: LoginResponse = {

@@ -8,7 +8,13 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
   {
     name: 'courtly/ignores',
-    ignores: ['**/dist/**', '**/coverage/**'],
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '.agents/**',
+      '.opencode/**',
+      'apps/web/src/routeTree.gen.ts',
+    ],
   },
   js.configs.recommended,
   {
@@ -35,6 +41,26 @@ export default tseslint.config(
     extends: [reactHooks.configs.flat['recommended-latest'], reactRefresh.configs.vite],
     languageOptions: {
       globals: globals.browser,
+    },
+    rules: {
+      // TanStack file routes always export `Route` beside their component, and
+      // shadcn modules export their `cva` variants beside the component.
+      'react-refresh/only-export-components': [
+        'error',
+        {
+          allowExportNames: ['Route', 'buttonVariants', 'badgeVariants', 'tabsListVariants'],
+        },
+      ],
+    },
+  },
+  {
+    name: 'courtly/web-routes',
+    // TanStack file routes export the route object (and sometimes helpers)
+    // beside component declarations; the file cannot be a components-only
+    // module by design.
+    files: ['apps/web/src/routes/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
     },
   },
   {
