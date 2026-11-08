@@ -1,10 +1,7 @@
 import { useMutation, useQueryClient, queryOptions, type QueryClient } from '@tanstack/react-query';
-import { bookingSchema } from '@courtly/contracts';
+import { bookingListSchema, bookingSchema } from '@courtly/contracts';
 import type { BookingCreate, BookingScope } from '@courtly/contracts';
-import { z } from 'zod';
 import { fetchData } from '@/lib/api';
-
-const bookingListSchema = z.array(bookingSchema);
 
 export const myBookingsQueryOptions = (scope: BookingScope) =>
   queryOptions({

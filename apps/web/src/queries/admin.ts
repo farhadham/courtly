@@ -1,10 +1,7 @@
 import { useMutation, useQueryClient, queryOptions, type QueryClient } from '@tanstack/react-query';
-import { adminBookingsResponseSchema, courtSchema } from '@courtly/contracts';
+import { adminBookingsResponseSchema, courtListSchema, courtSchema } from '@courtly/contracts';
 import type { CourtCreate, CourtUpdate } from '@courtly/contracts';
-import { z } from 'zod';
 import { fetchData } from '@/lib/api';
-
-const courtListSchema = z.array(courtSchema);
 
 /**
  * There is no `/admin/courts` read route: the admin court table is the public

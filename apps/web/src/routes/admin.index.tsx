@@ -1,30 +1,19 @@
 import { useMemo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
 import { DatePicker } from '@/components/date-picker';
 import { EmptyState, ErrorState, ListSkeleton } from '@/components/feedback';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { groupBookingsByCourt } from '@/lib/admin';
 import { errorMessage } from '@/lib/error-messages';
-import {
-  DEFAULT_FACILITY_TIME_ZONE,
-  formatFacilityTime,
-  todayInFacility,
-} from '@/lib/facility-time';
+import { DEFAULT_FACILITY_TIME_ZONE, formatTimeRange, todayInFacility } from '@/lib/facility-time';
 import { formatDuration, formatPrice } from '@/lib/format';
+import { parseDateSearch } from '@/lib/search';
 import { adminBookingsQueryOptions, adminCourtsQueryOptions } from '@/queries/admin';
 
-const adminDaySearchSchema = z.object({
-  date: z.iso.date().optional(),
-});
-
 export const Route = createFileRoute('/admin/')({
-  validateSearch: (search: Record<string, unknown>): { date?: string } => {
-    const parsed = adminDaySearchSchema.safeParse(search);
-    return parsed.success ? parsed.data : {};
-  },
+  validateSearch: parseDateSearch,
   component: AdminDayPage,
 });
 
@@ -117,8 +106,7 @@ function AdminDayPage() {
                       className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 text-sm last:border-0 last:pb-0"
                     >
                       <span className="tabular-nums">
-                        {formatFacilityTime(booking.startAt, group.timeZone)}&ndash;
-                        {formatFacilityTime(booking.endAt, group.timeZone)}
+                        {formatTimeRange(booking.startAt, booking.endAt, group.timeZone)}
                       </span>
                       <span className="text-muted-foreground">
                         {formatDuration(booking.durationHours)}

@@ -24,10 +24,10 @@ import { CANCELLATION_CLOSED_MESSAGE, errorMessage } from '@/lib/error-messages'
 import {
   DEFAULT_FACILITY_TIME_ZONE,
   formatFacilityDate,
-  formatFacilityTime,
+  formatTimeRange,
 } from '@/lib/facility-time';
 import { formatDuration, formatPrice } from '@/lib/format';
-import { useSession } from '@/lib/use-session';
+import { useIsAdmin } from '@/lib/use-session';
 import { myBookingsQueryOptions, useCancelBooking } from '@/queries/bookings';
 import { courtsQueryOptions } from '@/queries/courts';
 
@@ -61,8 +61,7 @@ function cancellationOfferFor(booking: Booking, now: Date, isAdmin: boolean): Ca
 function BookingsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const session = useSession();
-  const isAdmin = session?.user.role === 'ADMIN';
+  const isAdmin = useIsAdmin();
   const scope: BookingScope = search.scope ?? 'upcoming';
 
   const bookings = useQuery(myBookingsQueryOptions(scope));
@@ -169,8 +168,7 @@ function BookingsPage() {
                       <p className="text-sm text-muted-foreground">
                         {formatFacilityDate(booking.startAt, timeZone)} &middot;{' '}
                         <span className="tabular-nums">
-                          {formatFacilityTime(booking.startAt, timeZone)}&ndash;
-                          {formatFacilityTime(booking.endAt, timeZone)}
+                          {formatTimeRange(booking.startAt, booking.endAt, timeZone)}
                         </span>{' '}
                         &middot; {formatDuration(booking.durationHours)}
                       </p>

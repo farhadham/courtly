@@ -4,7 +4,7 @@ import type { BookingStatus } from '@courtly/contracts';
  * The fields revenue depends on: the snapshotted price and whether the booking
  * was cancelled. A cancelled row keeps its price but contributes nothing.
  */
-export interface PricedBooking {
+interface PricedBooking {
   status: BookingStatus;
   priceCents: number;
 }

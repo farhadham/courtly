@@ -20,7 +20,7 @@ import {
 import { ApiError } from '../http/errors';
 import { data } from '../http/respond';
 
-export interface CourtsRouterDependencies {
+interface CourtsRouterDependencies {
   db: AppDatabase;
   now?: () => Date;
 }

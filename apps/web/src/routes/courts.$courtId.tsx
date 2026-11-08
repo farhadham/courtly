@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import type { AvailabilitySlot, Booking } from '@courtly/contracts';
 import { ArrowLeftIcon, ClockIcon, ShieldIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { z } from 'zod';
 import { BookingConfirmationDialog } from '@/components/booking-confirmation-dialog';
 import { DatePicker } from '@/components/date-picker';
 import { ErrorState } from '@/components/feedback';
@@ -16,27 +15,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { isApiRequestError } from '@/lib/api';
 import { errorMessage, SLOT_TAKEN_MESSAGE } from '@/lib/error-messages';
-import { formatFacilityTime, todayInFacility } from '@/lib/facility-time';
+import { formatTimeRange, todayInFacility } from '@/lib/facility-time';
 import { formatDuration, formatPrice } from '@/lib/format';
 import { isIsoDate } from '@/lib/dates';
+import { parseDateSearch } from '@/lib/search';
 import { selectionPriceCents, selectionWindow, toggleSelection } from '@/lib/slots';
 import type { SlotSelection } from '@/lib/slots';
-import { useSession } from '@/lib/use-session';
+import { useIsAdmin } from '@/lib/use-session';
 import { availabilityQueryOptions } from '@/queries/availability';
 import { useCreateBooking } from '@/queries/bookings';
 import { courtQueryOptions } from '@/queries/courts';
 
-const courtsSearchSchema = z.object({
-  date: z.iso.date().optional(),
-});
-
 const NO_SLOTS: AvailabilitySlot[] = [];
 
 export const Route = createFileRoute('/courts/$courtId')({
-  validateSearch: (search: Record<string, unknown>): { date?: string } => {
-    const parsed = courtsSearchSchema.safeParse(search);
-    return parsed.success ? parsed.data : {};
-  },
+  validateSearch: parseDateSearch,
   component: CourtDetailPage,
 });
 
@@ -44,8 +37,7 @@ function CourtDetailPage() {
   const { courtId } = Route.useParams();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const session = useSession();
-  const isAdmin = session?.user.role === 'ADMIN';
+  const isAdmin = useIsAdmin();
 
   const courtQuery = useQuery(courtQueryOptions(courtId));
   const courtData = courtQuery.data;
@@ -223,9 +215,8 @@ function CourtDetailPage() {
                 <div className="flex flex-col gap-1">
                   <p className="font-medium">{formatDuration(selection.durationHours)}</p>
                   <p className="text-sm text-muted-foreground tabular-nums">
-                    {formatFacilityTime(windowRange.startAt, court.timeZone)}&ndash;
-                    {formatFacilityTime(windowRange.endAt, court.timeZone)} &middot;{' '}
-                    {formatPrice(selectionPrice)}
+                    {formatTimeRange(windowRange.startAt, windowRange.endAt, court.timeZone)}{' '}
+                    &middot; {formatPrice(selectionPrice)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

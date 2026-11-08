@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { formatFacilityDate, formatFacilityTime } from '@/lib/facility-time';
+import { formatFacilityDate, formatTimeRange } from '@/lib/facility-time';
 import { formatDuration, formatPrice } from '@/lib/format';
 
 /**
@@ -51,8 +51,7 @@ export function BookingConfirmationDialog({
               <dd className="font-medium">{court.name}</dd>
               <dt className="text-muted-foreground">Time</dt>
               <dd className="font-medium tabular-nums">
-                {formatFacilityTime(booking.startAt, court.timeZone)}&ndash;
-                {formatFacilityTime(booking.endAt, court.timeZone)}
+                {formatTimeRange(booking.startAt, booking.endAt, court.timeZone)}
               </dd>
               <dt className="text-muted-foreground">Duration</dt>
               <dd className="font-medium">{formatDuration(booking.durationHours)}</dd>

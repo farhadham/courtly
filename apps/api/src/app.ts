@@ -2,14 +2,14 @@ import express from 'express';
 import type { Express } from 'express';
 import { requireAuth, requireRole } from './auth/middleware';
 import type { AppDatabase } from './db/client';
-import { errorHandler } from './http/errors';
+import { ApiError, errorHandler } from './http/errors';
 import { createAdminRouter } from './routes/admin';
 import { createAuthRouter } from './routes/auth';
 import { createBookingsRouter } from './routes/bookings';
 import { createCourtsRouter } from './routes/courts';
 import { createHealthRouter } from './routes/health';
 
-export interface AppDependencies {
+interface AppDependencies {
   db: AppDatabase;
   jwtSecret: string;
   now?: () => Date;
@@ -41,14 +41,8 @@ export function createApp({ db, jwtSecret, now }: AppDependencies): Express {
 
   // Unknown routes answer in the error contract rather than Express's HTML
   // default, so failures only ever have one shape to parse.
-  app.use((_req, res) => {
-    res.status(404).json({
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Route not found',
-        details: {},
-      },
-    });
+  app.use(() => {
+    throw new ApiError(404, 'NOT_FOUND', 'Route not found');
   });
 
   app.use(errorHandler);

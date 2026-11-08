@@ -4,9 +4,9 @@ import { bookings, courts, users } from '@courtly/contracts';
 import type { BookingStatus, UserRole } from '@courtly/contracts';
 import { createDatabase } from './client';
 import { databaseUrl } from './config';
+import { HOUR_MS } from '../domain/time';
 
 const PASSWORD = 'courtly123';
-const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
 const USER_IDS = {

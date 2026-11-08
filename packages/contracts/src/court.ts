@@ -22,6 +22,9 @@ export const courtSchema = z.object({
   timeZone: z.string().min(1),
 });
 
+/** The `GET /courts` payload: every court the caller is allowed to see. */
+export const courtListSchema = z.array(courtSchema);
+
 export const courtIdParamSchema = z.object({ id: z.uuid() });
 
 /**

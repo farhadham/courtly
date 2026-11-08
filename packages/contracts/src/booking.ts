@@ -40,6 +40,9 @@ export const bookingSchema = z.object({
   createdAt: z.iso.datetime({ offset: true }),
 });
 
+/** The `GET /bookings/me` payload: the caller's own booking history. */
+export const bookingListSchema = z.array(bookingSchema);
+
 /**
  * The admin day view payload: every booking that starts on the requested
  * Lisbon day, plus the day's revenue. Revenue is summed from the snapshotted

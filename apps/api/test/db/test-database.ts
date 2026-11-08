@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Client, Pool } from 'pg';
 
-export const apiRoot = process.cwd();
+const apiRoot = process.cwd();
 const repoRoot = path.resolve(apiRoot, '../..');
 
 const envFile = path.join(repoRoot, '.env');

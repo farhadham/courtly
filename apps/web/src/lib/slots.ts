@@ -7,7 +7,7 @@ export interface SlotSelection {
   durationHours: 1 | 2;
 }
 
-export interface SelectionWindow {
+interface SelectionWindow {
   startAt: Date;
   endAt: Date;
 }

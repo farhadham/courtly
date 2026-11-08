@@ -1,9 +1,8 @@
 import type { ErrorCode } from '@courtly/contracts';
 import { courtOpeningWindow, localDateAt } from './availability';
+import { HOUR_MS } from './time';
 
-const HOUR_MS = 60 * 60 * 1000;
-
-export interface BookingCourt {
+interface BookingCourt {
   opensAt: string;
   closesAt: string;
   isActive: boolean;
@@ -20,7 +19,7 @@ export type BookingRejection = Extract<
   'BOOKING_IN_PAST' | 'BOOKING_OFF_SLOT' | 'OUTSIDE_OPENING_HOURS' | 'COURT_INACTIVE'
 >;
 
-export type BookingValidation =
+type BookingValidation =
   | {
       ok: true;
       startAt: Date;

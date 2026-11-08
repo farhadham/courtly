@@ -29,6 +29,18 @@ export function formatFacilityDate(instant: Date | string, timeZone: string): st
 }
 
 /**
+ * A start–end range on the facility clock. Both ends are formatted with the
+ * same zone, so the dash never hides a silent timezone conversion.
+ */
+export function formatTimeRange(
+  startAt: Date | string,
+  endAt: Date | string,
+  timeZone: string,
+): string {
+  return `${formatFacilityTime(startAt, timeZone)}\u2013${formatFacilityTime(endAt, timeZone)}`;
+}
+
+/**
  * The facility's current calendar date in `YYYY-MM-DD`, which is what the
  * availability endpoint expects. Deriving it from the viewer's local date can
  * be a day off when the viewer is in a different timezone.

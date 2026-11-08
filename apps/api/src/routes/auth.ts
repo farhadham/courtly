@@ -8,7 +8,7 @@ import type { AppDatabase } from '../db/client';
 import { ApiError } from '../http/errors';
 import { data } from '../http/respond';
 
-export interface AuthRouterDependencies {
+interface AuthRouterDependencies {
   db: AppDatabase;
   jwtSecret: string;
 }

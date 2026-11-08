@@ -19,7 +19,7 @@ import type { CancellationRejection } from '../domain/cancellation';
 import { ApiError } from '../http/errors';
 import { data } from '../http/respond';
 
-export interface BookingsRouterDependencies {
+interface BookingsRouterDependencies {
   db: AppDatabase;
   now?: () => Date;
 }

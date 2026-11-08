@@ -26,7 +26,7 @@ export function formatPriceInput(cents: number): string {
   return (cents / 100).toFixed(2);
 }
 
-export interface CourtDayGroup {
+interface CourtDayGroup {
   courtId: string;
   courtName: string;
   timeZone: string;

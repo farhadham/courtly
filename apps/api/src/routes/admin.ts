@@ -17,7 +17,7 @@ import { data } from '../http/respond';
 import { toBookingResponse } from './bookings';
 import { toCourtResponse, toTimeOfDay } from './courts';
 
-export interface AdminRouterDependencies {
+interface AdminRouterDependencies {
   db: AppDatabase;
 }
 

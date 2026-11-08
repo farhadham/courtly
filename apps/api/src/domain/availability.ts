@@ -1,4 +1,5 @@
 import type { AvailabilitySlot, CourtRow } from '@courtly/contracts';
+import { HOUR_MS } from './time';
 
 /**
  * The facility is in Lisbon. Court opening windows are local wall-clock times,
@@ -6,9 +7,7 @@ import type { AvailabilitySlot, CourtRow } from '@courtly/contracts';
  */
 export const FACILITY_TIME_ZONE = 'Europe/Lisbon';
 
-const HOUR_MS = 60 * 60 * 1000;
-
-export interface LocalDate {
+interface LocalDate {
   year: number;
   month: number;
   day: number;
@@ -73,7 +72,7 @@ function zoneOffsetMs(instant: Date): number {
  * The offset is applied twice so a boundary that falls on a DST change still
  * resolves against the correct side of the transition.
  */
-export function zonedTimeToUtc(date: LocalDate, hour: number, minute = 0): Date {
+function zonedTimeToUtc(date: LocalDate, hour: number, minute = 0): Date {
   const local = Date.UTC(date.year, date.month - 1, date.day, hour, minute);
   const firstGuess = local - zoneOffsetMs(new Date(local));
   const corrected = local - zoneOffsetMs(new Date(firstGuess));

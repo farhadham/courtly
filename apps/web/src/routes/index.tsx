@@ -8,7 +8,7 @@ import { CardGridSkeleton, EmptyState, ErrorState } from '@/components/feedback'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { errorMessage } from '@/lib/error-messages';
-import { useSession } from '@/lib/use-session';
+import { useIsAdmin } from '@/lib/use-session';
 import { courtsQueryOptions } from '@/queries/courts';
 
 const courtSearchSchema = z.object({
@@ -24,11 +24,10 @@ export const Route = createFileRoute('/')({
 });
 
 function CourtsPage() {
-  const session = useSession();
+  const isAdmin = useIsAdmin();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const courts = useQuery(courtsQueryOptions());
-  const isAdmin = session?.user.role === 'ADMIN';
 
   /**
    * Chips come from the payload, never a hardcoded sport list, and are not

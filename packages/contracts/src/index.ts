@@ -19,8 +19,6 @@ export {
   type UserRole,
 } from './schema';
 
-export const CONTRACTS_VERSION = '0.2.0';
-
 export type { ApiData } from './envelope';
 export type { HealthResponse } from './health';
 
@@ -36,6 +34,7 @@ export {
   courtCreateSchema,
   courtIdParamSchema,
   courtListQuerySchema,
+  courtListSchema,
   courtRowSchema,
   courtSchema,
   courtUpdateSchema,
@@ -48,6 +47,7 @@ export {
   adminBookingsResponseSchema,
   bookingCreateSchema,
   bookingIdParamSchema,
+  bookingListSchema,
   bookingRowSchema,
   bookingSchema,
   myBookingsQuerySchema,

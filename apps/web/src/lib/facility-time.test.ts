@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatFacilityDate, formatFacilityTime, todayInFacility } from './facility-time';
+import {
+  formatFacilityDate,
+  formatFacilityTime,
+  formatTimeRange,
+  todayInFacility,
+} from './facility-time';
 
 describe('facility time', () => {
   describe('formatFacilityTime', () => {
@@ -24,6 +29,14 @@ describe('facility time', () => {
   describe('formatFacilityDate', () => {
     it('formats the calendar date in the facility zone', () => {
       expect(formatFacilityDate('2030-01-15T23:30:00Z', 'Europe/Lisbon')).toBe('15 Jan 2030');
+    });
+  });
+
+  describe('formatTimeRange', () => {
+    it('joins both ends on the facility clock with one dash', () => {
+      expect(
+        formatTimeRange('2030-07-15T17:00:00+00:00', '2030-07-15T18:00:00+00:00', 'Europe/Lisbon'),
+      ).toBe('18:00\u201319:00');
     });
   });
 });

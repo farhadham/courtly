@@ -1,14 +1,15 @@
 import type { BookingStatus, ErrorCode } from '@courtly/contracts';
+import { HOUR_MS } from './time';
 
-const CANCELLATION_WINDOW_MS = 2 * 60 * 60 * 1000;
+const CANCELLATION_WINDOW_MS = 2 * HOUR_MS;
 
-export interface CancellableBooking {
+interface CancellableBooking {
   userId: string;
   status: BookingStatus;
   startAt: Date;
 }
 
-export interface CancellationPolicyInput {
+interface CancellationPolicyInput {
   booking: CancellableBooking;
   userId: string;
   now: Date;
@@ -24,7 +25,7 @@ export type CancellationRejection = Extract<
   'FORBIDDEN' | 'BOOKING_ALREADY_CANCELLED' | 'CANCELLATION_WINDOW_CLOSED'
 >;
 
-export type CancellationValidation = { ok: true } | { ok: false; code: CancellationRejection };
+type CancellationValidation = { ok: true } | { ok: false; code: CancellationRejection };
 
 export function validateCancellation({
   booking,

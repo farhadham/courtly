@@ -1,9 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
-import { courtSchema } from '@courtly/contracts';
-import { z } from 'zod';
+import { courtListSchema, courtSchema } from '@courtly/contracts';
 import { fetchData } from '@/lib/api';
-
-const courtListSchema = z.array(courtSchema);
 
 /**
  * The court list is fetched unfiltered even when a sport chip is active: chips

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
-import { useSession } from '@/lib/use-session';
+import { useIsAdmin } from '@/lib/use-session';
 
 export const Route = createFileRoute('/admin')({
   component: AdminLayout,
@@ -16,9 +16,9 @@ export const Route = createFileRoute('/admin')({
  * duplicate it on every admin screen.
  */
 function AdminLayout() {
-  const session = useSession();
+  const isAdmin = useIsAdmin();
 
-  if (session?.user.role !== 'ADMIN') {
+  if (!isAdmin) {
     return <Forbidden />;
   }
 
