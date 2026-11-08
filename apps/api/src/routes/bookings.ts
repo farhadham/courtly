@@ -102,6 +102,37 @@ export function createBookingsRouter({
     res.json(data(rows.map(toBookingResponse)));
   });
 
+  /**
+   * A single booking, readable only by its owner. The ownership filter is part
+   * of the query rather than a post-fetch check, so another user's booking and
+   * an unknown id produce the same empty result — ids do not leak existence.
+   * Admins are not special-cased; the admin day view is their read. Registered
+   * after `/me` so that literal path is matched first.
+   */
+  router.get('/:id', async (req, res) => {
+    const parsedParams = bookingIdParamSchema.safeParse(req.params);
+
+    if (!parsedParams.success) {
+      throw new ApiError(400, 'VALIDATION_FAILED', 'Invalid booking id', {
+        issues: parsedParams.error.issues,
+      });
+    }
+
+    const userId = requireAuthUser(req).sub;
+
+    const [booking] = await db
+      .select()
+      .from(bookings)
+      .where(and(eq(bookings.id, parsedParams.data.id), eq(bookings.userId, userId)))
+      .limit(1);
+
+    if (!booking) {
+      throw new ApiError(404, 'NOT_FOUND', 'Booking not found');
+    }
+
+    res.json(data(toBookingResponse(booking)));
+  });
+
   router.post('/', requireRole('USER'), async (req, res) => {
     const parsed = bookingCreateSchema.safeParse(req.body);
 
