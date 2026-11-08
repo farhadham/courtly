@@ -36,6 +36,12 @@ interface SeedBooking {
   status: BookingStatus;
 }
 
+/**
+ * Fixtures are relative to the run that creates them, so the demo is never
+ * empty: one past confirmed booking, one past cancellation, and four future
+ * bookings across the courts. The second user owns two of the future rows, so
+ * the availability grid already shows taken slots.
+ */
 function bookingFixtures(now: Date): SeedBooking[] {
   const day = utcDayStart(now);
   const at = (dayOffset: number, hour: number): Date =>
