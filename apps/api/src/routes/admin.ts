@@ -1,6 +1,8 @@
-import { eq } from 'drizzle-orm';
+import { and, asc, eq, gte, lt } from 'drizzle-orm';
 import { Router } from 'express';
 import {
+  adminBookingsQuerySchema,
+  bookings,
   courtCreateSchema,
   courtIdParamSchema,
   courtUpdateSchema,
@@ -8,8 +10,11 @@ import {
 } from '@courtly/contracts';
 import type { AppDatabase } from '../db/client';
 import { isUniqueViolation } from '../db/errors';
+import { localDateFromIso, localDayWindow } from '../domain/availability';
+import { sumRevenue } from '../domain/revenue';
 import { ApiError } from '../http/errors';
 import { data } from '../http/respond';
+import { toBookingResponse } from './bookings';
 import { toCourtResponse, toTimeOfDay } from './courts';
 
 export interface AdminRouterDependencies {
@@ -22,6 +27,34 @@ export interface AdminRouterDependencies {
  */
 export function createAdminRouter({ db }: AdminRouterDependencies): Router {
   const router = Router();
+
+  /**
+   * The operational day view: every booking whose start falls inside the
+   * requested Lisbon day, across all courts and including deactivated ones.
+   * Revenue sums the snapshotted price of non-cancelled rows (ADR-0002), so it
+   * stays a historical fact when a court's price changes later.
+   */
+  router.get('/bookings', async (req, res) => {
+    const parsed = adminBookingsQuerySchema.safeParse(req.query);
+    const date = parsed.success ? localDateFromIso(parsed.data.date) : null;
+
+    if (!parsed.success || !date) {
+      throw new ApiError(400, 'VALIDATION_FAILED', 'Invalid booking date', {
+        issues: parsed.success ? [] : parsed.error.issues,
+      });
+    }
+
+    const { startsAt, endsAt } = localDayWindow(date);
+    const rows = await db
+      .select()
+      .from(bookings)
+      .where(and(gte(bookings.startAt, startsAt), lt(bookings.startAt, endsAt)))
+      .orderBy(asc(bookings.startAt));
+
+    const totalRevenueCents = sumRevenue(rows);
+
+    res.json(data({ bookings: rows.map(toBookingResponse), totalRevenueCents }));
+  });
 
   router.post('/courts', async (req, res) => {
     const parsed = courtCreateSchema.safeParse(req.body);

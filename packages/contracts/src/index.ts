@@ -44,12 +44,16 @@ export {
 export type { Court, CourtCreate, CourtListQuery, CourtRow, CourtUpdate } from './court';
 
 export {
+  BOOKING_SCOPES,
+  adminBookingsQuerySchema,
+  adminBookingsResponseSchema,
   bookingCreateSchema,
   bookingIdParamSchema,
   bookingRowSchema,
   bookingSchema,
+  myBookingsQuerySchema,
 } from './booking';
-export type { Booking, BookingCreate, BookingRow } from './booking';
+export type { Booking, BookingCreate, BookingRow, BookingScope } from './booking';
 
 export {
   AVAILABILITY_STATUSES,

@@ -51,12 +51,12 @@ Deactivating a court never deletes it and never deletes its bookings.
 
 1. **Duration.** A booking is exactly 1 or 2 consecutive hours. Nothing else is accepted.
 2. **Opening hours.** `start_at` must be at or after opening and `end_at` at or before closing, on that court's local day.
-3. **Future only.** A booking is rejected when `start_at <= now()`.
+3. **Future only.** A booking is rejected when `start_at <= now()`. The same boundary splits a user's history: `upcoming` means a start strictly after `now()`.
 4. **No overlap.** No two `CONFIRMED` bookings on the same court may overlap. Enforced by a PostgreSQL exclusion constraint, not by application code. Back-to-back is allowed: `[start, end)` bounds.
 5. **Concurrency.** Two simultaneous requests for the same slot must produce exactly one booking. The loser receives `409 SLOT_TAKEN`.
 6. **Cancellation window.** A booking may be cancelled while `now() <= start_at - interval '2 hours'`. Exactly two hours before is still cancellable.
 7. **Ownership.** Only the booking's owner may cancel it. Admins cannot.
-8. **Cancelled bookings.** Kept as rows with `status = 'CANCELLED'`. Their slots return to availability. They never count toward revenue.
+8. **Cancelled bookings.** Kept as rows with `status = 'CANCELLED'`. Their slots return to availability. They never count toward revenue. They stay in the owner's history but never appear as upcoming.
 9. **Price snapshot.** Revenue for a past booking is unaffected by later edits to the court's price.
 10. **Inactive courts.** Not listed to users, refuse new bookings, keep existing bookings, and still count toward revenue.
 

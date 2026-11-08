@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { AvailabilitySlot } from '@courtly/contracts';
-import { availabilityForDay, localDateFromIso } from '../../src/domain/availability';
+import {
+  availabilityForDay,
+  localDateFromIso,
+  localDayWindow,
+} from '../../src/domain/availability';
 
 const court = { opensAt: '00:00:00', closesAt: '05:00:00' };
 const now = new Date('2026-01-01T00:00:00Z');
@@ -110,5 +114,25 @@ describe('localDateFromIso', () => {
 
   it('rejects a zero-padding error', () => {
     expect(localDateFromIso('2026-1-5')).toBeNull();
+  });
+});
+
+describe('localDayWindow', () => {
+  it('spans 23 hours on the Lisbon spring-forward day', () => {
+    // 2026-03-29: Lisbon jumps 01:00 WET -> 02:00 WEST.
+    const { startsAt, endsAt } = localDayWindow({ year: 2026, month: 3, day: 29 });
+
+    expect(startsAt.toISOString()).toBe('2026-03-29T00:00:00.000Z');
+    expect(endsAt.toISOString()).toBe('2026-03-29T23:00:00.000Z');
+    expect(endsAt.getTime() - startsAt.getTime()).toBe(23 * 60 * 60 * 1000);
+  });
+
+  it('spans 25 hours on the Lisbon fall-back day', () => {
+    // 2026-10-25: Lisbon repeats 01:00 (02:00 WEST -> 01:00 WET).
+    const { startsAt, endsAt } = localDayWindow({ year: 2026, month: 10, day: 25 });
+
+    expect(startsAt.toISOString()).toBe('2026-10-24T23:00:00.000Z');
+    expect(endsAt.toISOString()).toBe('2026-10-26T00:00:00.000Z');
+    expect(endsAt.getTime() - startsAt.getTime()).toBe(25 * 60 * 60 * 1000);
   });
 });
