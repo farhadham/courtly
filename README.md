@@ -2,7 +2,7 @@
 
 Sports facility booking: browse courts, see hourly availability, book one or two
 hours, and cancel up to two hours before the start. Users manage their own
-bookings; admins manage courts and see the day's takings.
+bookings; admins manage courts and see the day's revenue.
 
 ## Run
 
@@ -34,20 +34,21 @@ docker compose down -v    # fresh database next time
 
 ## Stack choices
 
-**React + Vite, not Next.js.** It is a single-page app behind a login, with no
-SEO or server-rendering need, and the brief requires a separate backend anyway.
-Vite builds static files that nginx serves, and TanStack Router/Query handle
+**React + Vite, not Next.js.** It's a single-page app behind a login, so SEO
+and server rendering don't matter, and the brief wants a separate backend
+anyway. Vite builds static files for nginx, and TanStack Router/Query handle
 routing, caching and invalidation.
 
 **Express 5, not NestJS.** The domain is small and the hard rule lives in the
-database, so a DI container and decorators would only add ceremony. Plain
-routers and middleware keep the request path visible, and Express 5 forwards
-async errors to one handler. More in `docs/adr/0003-express-over-nestjs.md`.
+database, so NestJS's dependency injection and decorators would mean more setup
+for little gain. Plain routers keep the request path easy to follow, and
+Express 5 sends async errors to one handler. More in
+`docs/adr/0003-express-over-nestjs.md`.
 
-**PostgreSQL 16 + Drizzle.** The booking rule needs an interval exclusion
-constraint, which is a native Postgres primitive; MySQL has no equivalent and
-MongoDB cannot express "no overlapping ranges for the same court" declaratively.
-Drizzle gives a typed schema and plain SQL migrations.
+**PostgreSQL 16 + Drizzle.** The double-booking rule is an interval exclusion
+constraint, which Postgres has built in. MySQL has no equivalent, and MongoDB
+can't express "no overlapping ranges for the same court" declaratively. Drizzle
+gives a typed schema and plain SQL migrations.
 
 ## How double bookings are prevented
 
@@ -59,12 +60,12 @@ ALTER TABLE "bookings" ADD CONSTRAINT "bookings_no_overlap"
   WHERE ("status" <> 'CANCELLED');
 ```
 
-It lives in `apps/api/drizzle/0001_booking_no_overlap.sql`. A `SELECT`-then-`INSERT`
-check has a race between the two statements; the constraint runs inside the
-insert, so one of two simultaneous requests always loses with SQLSTATE `23P01`.
-That is mapped to `409 SLOT_TAKEN` in `apps/api/src/routes/bookings.ts`. Because
-the constraint is partial, cancelling a booking keeps the row as history but
-frees its slot.
+It lives in `apps/api/drizzle/0001_booking_no_overlap.sql`. A `SELECT` then
+`INSERT` check leaves a race between the two statements; the constraint runs as
+part of the insert, so one of two simultaneous requests always loses with
+SQLSTATE `23P01`. That is mapped to `409 SLOT_TAKEN` in
+`apps/api/src/routes/bookings.ts`. Because the constraint is partial, cancelling
+keeps the row as history but frees its slot.
 
 Tests: `apps/api/test/db/constraints.test.ts` and
 `apps/api/test/http/bookings.test.ts` fire two concurrent inserts and assert
@@ -72,8 +73,8 @@ exactly one wins.
 
 ## Tests
 
-The database-enforced rules are tested against real Postgres, so the tests need
-the database container running (not the whole stack):
+The database rules run against real Postgres, so start the database container
+first:
 
 ```bash
 npm install
@@ -83,11 +84,11 @@ npm run test    # API + web
 npm run check   # format, lint, typecheck
 ```
 
-The suite creates `courtly_test` on first run and refuses to run against any
-database whose name does not end in `_test`. API tests cover the booking rules
-(duration, opening hours, past starts, cancellation window) with pure unit
-tests, and the database-enforced rules against real Postgres. Web tests cover
-the logic helpers. The full API contract is in [`docs/spec.md`](docs/spec.md).
+The suite creates `courtly_test` on first run and refuses any database whose
+name does not end in `_test`. API tests cover the booking rules (duration,
+opening hours, past starts, cancellation window) as unit tests, plus the
+database rules against real Postgres. Web tests cover the logic helpers. The API
+contract is in [`docs/spec.md`](docs/spec.md).
 
 ## Local development
 
@@ -102,18 +103,7 @@ npm run dev:api    # http://localhost:3001
 npm run dev:web    # http://localhost:3000
 ```
 
-Do not run the Docker web container and the Vite dev server at the same time —
-both bind port 3000. The Compose API has no host port (nginx proxies it inside
-the network), so 3001 is free for `npm run dev:api`. The Compose database
-publishes on host port 5433 so it can sit next to a local PostgreSQL; the
-`db` container is reused for local development.
-
-## What I would do next
-
-- Real-time availability over SSE (`LISTEN/NOTIFY` + cache updates) instead of
-  refetching the day.
-- A waitlist promoted in the same transaction that cancels a booking.
-- Seed 10k+ bookings and record `EXPLAIN ANALYZE` timings for the day view.
-- Pagination for the admin day view and booking history.
-- Harder auth: short-lived access tokens, refresh in an `httpOnly` cookie, login
-  rate limiting.
+The Compose database is published on host port 5433, so it can run next to a
+local PostgreSQL. Don't run the Docker web container and the Vite dev server at
+the same time — both use port 3000. The API has no host port in Compose (nginx
+proxies it), so 3001 is free locally.
