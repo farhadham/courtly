@@ -72,15 +72,22 @@ exactly one wins.
 
 ## Tests
 
+The database-enforced rules are tested against real Postgres, so the tests need
+the database container running (not the whole stack):
+
 ```bash
+npm install
+cp .env.example .env
+docker compose up -d db
 npm run test    # API + web
 npm run check   # format, lint, typecheck
 ```
 
-API tests cover the booking rules (duration, opening hours, past starts,
-cancellation window) with pure unit tests, and the database-enforced rules
-against real Postgres. Web tests cover the logic helpers. The full API contract
-is in [`docs/spec.md`](docs/spec.md).
+The suite creates `courtly_test` on first run and refuses to run against any
+database whose name does not end in `_test`. API tests cover the booking rules
+(duration, opening hours, past starts, cancellation window) with pure unit
+tests, and the database-enforced rules against real Postgres. Web tests cover
+the logic helpers. The full API contract is in [`docs/spec.md`](docs/spec.md).
 
 ## Local development
 
