@@ -4,11 +4,10 @@
  * Everything the API and the web app agree on lives here. Zod schemas are the
  * single source of truth: TypeScript types are inferred from them, so a change
  * to a schema is a compile error on both sides rather than a runtime surprise.
+ *
+ * This entry point is the package's only public surface. Schemas live in a
+ * module per domain resource; import them from here, never from the modules.
  */
-
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { z } from 'zod';
-import { USER_ROLES, bookings, courts, users } from './schema';
 
 export {
   BOOKING_STATUSES,
@@ -22,172 +21,35 @@ export {
 
 export const CONTRACTS_VERSION = '0.1.0';
 
-export interface HealthResponse {
-  status: 'ok';
-  uptimeSeconds: number;
-}
+export type { HealthResponse } from './health';
 
-/**
- * The closed set of business failure codes from the API error contract. Every
- * failure that a caller can act on carries exactly one of these codes.
- */
-export const ERROR_CODES = [
-  'VALIDATION_FAILED',
-  'UNAUTHORIZED',
-  'FORBIDDEN',
-  'NOT_FOUND',
-  'SLOT_TAKEN',
-  'COURT_NAME_TAKEN',
-  'CANCELLATION_WINDOW_CLOSED',
-  'BOOKING_IN_PAST',
-  'OUTSIDE_OPENING_HOURS',
-  'COURT_INACTIVE',
-] as const;
+export { ERROR_CODES, apiErrorSchema } from './errors';
+export type { ApiErrorBody, ErrorCode } from './errors';
 
-export type ErrorCode = (typeof ERROR_CODES)[number];
+export { authUserSchema, loginRequestSchema, loginResponseSchema } from './auth';
+export { userInsertSchema, userRowSchema } from './auth';
+export type { AuthUser, LoginRequest, LoginResponse, UserRow } from './auth';
 
-export const apiErrorSchema = z.object({
-  error: z.object({
-    code: z.enum(ERROR_CODES),
-    message: z.string(),
-    details: z.record(z.string(), z.unknown()),
-  }),
-});
+export { timeOfDaySchema } from './primitives';
 
-export type ApiErrorBody = z.infer<typeof apiErrorSchema>;
+export {
+  courtCreateSchema,
+  courtIdParamSchema,
+  courtInsertSchema,
+  courtListQuerySchema,
+  courtRowSchema,
+  courtSchema,
+  courtUpdateSchema,
+} from './court';
+export type { Court, CourtCreate, CourtListQuery, CourtRow, CourtUpdate } from './court';
 
-/**
- * The authenticated principal returned by `POST /auth/login` and encoded in
- * the JWT. It never includes the password hash.
- */
-export const authUserSchema = z.object({
-  id: z.uuid(),
-  email: z.email(),
-  role: z.enum(USER_ROLES),
-});
+export { bookingCreateSchema, bookingInsertSchema, bookingRowSchema } from './booking';
+export type { BookingCreate, BookingRow } from './booking';
 
-export const loginRequestSchema = z.object({
-  email: z.email(),
-  password: z.string().min(1),
-});
-
-export const loginResponseSchema = z.object({
-  token: z.string().min(1),
-  user: authUserSchema,
-});
-
-export type AuthUser = z.infer<typeof authUserSchema>;
-export type LoginRequest = z.infer<typeof loginRequestSchema>;
-export type LoginResponse = z.infer<typeof loginResponseSchema>;
-
-export const userRowSchema = createSelectSchema(users);
-export const courtRowSchema = createSelectSchema(courts);
-export const bookingRowSchema = createSelectSchema(bookings);
-
-export const userInsertSchema = createInsertSchema(users);
-export const courtInsertSchema = createInsertSchema(courts);
-export const bookingInsertSchema = createInsertSchema(bookings);
-
-/**
- * A local wall-clock time in the `HH:MM` form the court API speaks.
- */
-export const timeOfDaySchema = z
-  .string()
-  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected a time in HH:MM');
-
-/**
- * A court as the API returns it. Times are normalised to `HH:MM`; the database
- * stores them with seconds.
- */
-export const courtSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  sportType: z.string(),
-  hourlyPriceCents: z.number().int(),
-  opensAt: timeOfDaySchema,
-  closesAt: timeOfDaySchema,
-  isActive: z.boolean(),
-  // IANA zone the court's opening hours are expressed in, so clients format
-  // slot instants in the facility's clock rather than the viewer's.
-  timeZone: z.string().min(1),
-});
-
-export type Court = z.infer<typeof courtSchema>;
-
-export const courtIdParamSchema = z.object({ id: z.uuid() });
-
-/**
- * Court fields accepted when an admin creates one. `isActive` defaults to true
- * at the persistence layer when omitted.
- */
-const courtFieldsSchema = z.object({
-  name: z.string().trim().min(1),
-  sportType: z.string().trim().min(1).max(50),
-  hourlyPriceCents: z.number().int().positive(),
-  opensAt: timeOfDaySchema,
-  closesAt: timeOfDaySchema,
-  isActive: z.boolean().optional(),
-});
-
-export const courtCreateSchema = courtFieldsSchema.refine(
-  (court) => court.closesAt > court.opensAt,
-  {
-    message: 'closesAt must be after opensAt',
-    path: ['closesAt'],
-  },
-);
-
-export const courtUpdateSchema = courtFieldsSchema.partial();
-
-export type CourtCreate = z.infer<typeof courtCreateSchema>;
-export type CourtUpdate = z.infer<typeof courtUpdateSchema>;
-
-/**
- * Query accepted by `GET /courts`. `includeInactive` only has an effect for an
- * admin; the browser router ignores it for everyone else.
- */
-export const courtListQuerySchema = z.object({
-  sport: z.string().min(1).optional(),
-  includeInactive: z.enum(['true', 'false']).optional(),
-});
-
-export type CourtListQuery = z.infer<typeof courtListQuerySchema>;
-
-/**
- * The one-or-two-hour booking request accepted by `POST /bookings`.
- *
- * `startAt` is an ISO-8601 instant with an explicit offset, normalised to a
- * `Date` so the persistence layer never parses a date string itself.
- */
-export const bookingCreateSchema = z.object({
-  courtId: z.uuid(),
-  startAt: z.iso.datetime({ offset: true }).transform((value) => new Date(value)),
-  durationHours: z.union([z.literal(1), z.literal(2)]),
-});
-
-export type UserRow = z.infer<typeof userRowSchema>;
-export type CourtRow = z.infer<typeof courtRowSchema>;
-export type BookingRow = z.infer<typeof bookingRowSchema>;
-export type BookingCreate = z.infer<typeof bookingCreateSchema>;
-
-export const AVAILABILITY_STATUSES = ['AVAILABLE', 'TAKEN', 'PAST'] as const;
-
-export type AvailabilityStatus = (typeof AVAILABILITY_STATUSES)[number];
-
-/**
- * Query accepted by `GET /courts/:id/availability`. The date is a calendar day
- * in the facility's local time zone, not a UTC day.
- */
-export const availabilityQuerySchema = z.object({
-  date: z.iso.date(),
-});
-
-export const availabilitySlotSchema = z.object({
-  startsAt: z.iso.datetime({ offset: true }),
-  status: z.enum(AVAILABILITY_STATUSES),
-});
-
-export const availabilityResponseSchema = z.array(availabilitySlotSchema);
-
-export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>;
-export type AvailabilitySlot = z.infer<typeof availabilitySlotSchema>;
+export {
+  AVAILABILITY_STATUSES,
+  availabilityQuerySchema,
+  availabilityResponseSchema,
+  availabilitySlotSchema,
+} from './availability';
+export type { AvailabilityQuery, AvailabilitySlot, AvailabilityStatus } from './availability';
