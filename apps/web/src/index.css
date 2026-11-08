@@ -9,29 +9,38 @@
  */
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Courtly's palette: a deep forest green for actions and brand surfaces, warm
+ * paper for the page, and a small chartreuse highlight borrowed from a tennis
+ * ball. The accent is deliberately rare — selection rings, decorative marks and
+ * the odd icon tile — so it keeps its energy.
+ */
 :root {
   /* Native widgets (inputs, scrollbars) stay light for the same reason. */
   color-scheme: light;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --background: oklch(0.982 0.007 96);
+  --foreground: oklch(0.22 0.024 155);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.22 0.024 155);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --radius: 0.625rem;
+  --popover-foreground: oklch(0.22 0.024 155);
+  --primary: oklch(0.39 0.086 156);
+  --primary-foreground: oklch(0.985 0.012 100);
+  --secondary: oklch(0.955 0.018 105);
+  --secondary-foreground: oklch(0.29 0.036 156);
+  --muted: oklch(0.958 0.011 100);
+  --muted-foreground: oklch(0.49 0.022 145);
+  --accent: oklch(0.944 0.032 112);
+  --accent-foreground: oklch(0.29 0.04 152);
+  --destructive: oklch(0.552 0.196 27.325);
+  --destructive-foreground: oklch(0.985 0.003 247.858);
+  --border: oklch(0.905 0.014 106);
+  --input: oklch(0.895 0.016 106);
+  --ring: oklch(0.6 0.105 150);
+  /* Tennis-ball accent. Use with `bg-highlight` / `text-highlight-foreground`. */
+  --highlight: oklch(0.868 0.164 118);
+  --highlight-foreground: oklch(0.28 0.06 143);
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -54,10 +63,13 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
 }
 
 @layer base {
@@ -65,7 +77,40 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    /* A soft wash keeps cards feeling lifted without adding another surface. */
+    background-image:
+      radial-gradient(
+        circle at 12% -8%,
+        color-mix(in oklab, var(--highlight) 22%, transparent),
+        transparent 34rem
+      ),
+      radial-gradient(
+        circle at 92% 0%,
+        color-mix(in oklab, var(--primary) 8%, transparent),
+        transparent 30rem
+      );
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: var(--highlight);
+    color: var(--highlight-foreground);
+  }
+}
+
+@layer utilities {
+  /* Pink-noise-free court lines: a quiet decorative rule for brand surfaces. */
+  .court-lines {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.09) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.09) 1px, transparent 1px);
+    background-size: 3.5rem 3.5rem;
   }
 }

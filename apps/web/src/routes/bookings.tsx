@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import type { Booking, BookingScope } from '@courtly/contracts';
+import { CalendarDaysIcon, ClockIcon, HistoryIcon, InfoIcon } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { EmptyState, ErrorState, ListSkeleton } from '@/components/feedback';
+import { PageHeader } from '@/components/page-header';
+import { SportIcon } from '@/components/sport-icon';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +31,7 @@ import {
 } from '@/lib/facility-time';
 import { formatDuration, formatPrice } from '@/lib/format';
 import { useIsAdmin } from '@/lib/use-session';
+import { cn } from '@/lib/utils';
 import { myBookingsQueryOptions, useCancelBooking } from '@/queries/bookings';
 import { courtsQueryOptions } from '@/queries/courts';
 
@@ -104,17 +108,22 @@ function BookingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">My bookings</h1>
-        <p className="text-sm text-muted-foreground">
-          Times are shown in the court&rsquo;s facility time zone.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Your schedule"
+        title="My bookings"
+        description="Upcoming and past reservations, shown in the court's facility time zone."
+      />
 
       <Tabs value={scope} onValueChange={changeScope}>
-        <TabsList>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="past">Past</TabsTrigger>
+        <TabsList className="bg-secondary/80 p-1">
+          <TabsTrigger value="upcoming">
+            <CalendarDaysIcon aria-hidden="true" />
+            Upcoming
+          </TabsTrigger>
+          <TabsTrigger value="past">
+            <HistoryIcon aria-hidden="true" />
+            Past
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -153,26 +162,68 @@ function BookingsPage() {
             const timeZone = court?.timeZone ?? DEFAULT_FACILITY_TIME_ZONE;
             const cancelling = cancelBooking.isPending && pendingCancel?.id === booking.id;
             const cancellationOffer = cancellationOfferFor(booking, now, isAdmin);
+            const confirmed = booking.status === 'CONFIRMED';
 
             return (
               <li key={booking.id}>
-                <Card>
-                  <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium">{court?.name ?? 'Court'}</p>
-                        <Badge variant={booking.status === 'CONFIRMED' ? 'secondary' : 'outline'}>
-                          {booking.status === 'CONFIRMED' ? 'Confirmed' : 'Cancelled'}
-                        </Badge>
+                <Card
+                  className={cn(
+                    'overflow-hidden transition-colors',
+                    !confirmed && 'border-border/70 bg-muted/30',
+                  )}
+                >
+                  <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3">
+                      <SportIcon
+                        sportType={court?.sportType ?? ''}
+                        className={cn(!confirmed && 'opacity-70 grayscale')}
+                      />
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium">{court?.name ?? 'Court'}</p>
+                          <Badge
+                            variant={confirmed ? 'secondary' : 'outline'}
+                            className={cn(
+                              'gap-1.5',
+                              confirmed && 'bg-primary/10 text-primary',
+                              !confirmed && 'text-muted-foreground',
+                            )}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                'size-1.5 rounded-full',
+                                confirmed ? 'bg-primary' : 'bg-muted-foreground',
+                              )}
+                            />
+                            {confirmed ? 'Confirmed' : 'Cancelled'}
+                          </Badge>
+                        </div>
+
+                        <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2">
+                          <span className="inline-flex items-center gap-1">
+                            <CalendarDaysIcon aria-hidden="true" className="size-3.5" />
+                            {formatFacilityDate(booking.startAt, timeZone)}
+                          </span>
+                          <span aria-hidden="true" className="hidden sm:inline">
+                            &middot;
+                          </span>
+                          <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="inline-flex items-center gap-1 tabular-nums">
+                              <ClockIcon aria-hidden="true" className="size-3.5" />
+                              {formatTimeRange(booking.startAt, booking.endAt, timeZone)}
+                            </span>
+                            <span aria-hidden="true" className="text-border">
+                              &middot;
+                            </span>
+                            <span>{formatDuration(booking.durationHours)}</span>
+                          </span>
+                        </div>
+
+                        <p className="text-sm font-semibold tabular-nums">
+                          {formatPrice(booking.priceCents)}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {formatFacilityDate(booking.startAt, timeZone)} &middot;{' '}
-                        <span className="tabular-nums">
-                          {formatTimeRange(booking.startAt, booking.endAt, timeZone)}
-                        </span>{' '}
-                        &middot; {formatDuration(booking.durationHours)}
-                      </p>
-                      <p className="text-sm">{formatPrice(booking.priceCents)}</p>
                     </div>
 
                     {cancellationOffer === 'open' ? (
@@ -181,13 +232,15 @@ function BookingsPage() {
                         size="sm"
                         onClick={() => setPendingCancel(booking)}
                         disabled={cancelling}
+                        className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                       >
                         Cancel booking
                       </Button>
                     ) : null}
 
                     {cancellationOffer === 'closed' ? (
-                      <p className="max-w-56 text-xs text-muted-foreground">
+                      <p className="flex max-w-60 items-start gap-1.5 text-xs text-muted-foreground">
+                        <InfoIcon aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
                         {CANCELLATION_CLOSED_MESSAGE}
                       </p>
                     ) : null}
