@@ -5,11 +5,25 @@ import { cn } from '@/lib/utils';
 import { formatFacilityTime } from '@/lib/facility-time';
 import type { SlotSelection } from '@/lib/slots';
 
-const STATUS: Record<AvailabilityStatus, { label: string; icon: LucideIcon }> = {
-  AVAILABLE: { label: 'Available', icon: CircleCheckIcon },
-  TAKEN: { label: 'Taken', icon: LockIcon },
-  PAST: { label: 'Past', icon: ClockIcon },
+const STATUS: Record<AvailabilityStatus, { label: string; icon: LucideIcon; swatch: string }> = {
+  AVAILABLE: {
+    label: 'Available',
+    icon: CircleCheckIcon,
+    swatch: 'border-primary/30 bg-primary/10 text-primary',
+  },
+  TAKEN: {
+    label: 'Taken',
+    icon: LockIcon,
+    swatch: 'border-border bg-muted text-muted-foreground',
+  },
+  PAST: {
+    label: 'Past',
+    icon: ClockIcon,
+    swatch: 'border-dashed border-border bg-transparent text-muted-foreground',
+  },
 };
+
+const SELECTED_SWATCH = 'border-primary bg-primary text-primary-foreground';
 
 /**
  * One button per hourly slot. State is carried by the label, the icon and the
@@ -30,24 +44,38 @@ export function SlotGrid({
   readOnly?: boolean;
 }) {
   if (slots.length === 0) {
-    return <p className="text-sm text-muted-foreground">No slots were returned for this day.</p>;
+    return (
+      <p className="rounded-xl border border-dashed bg-card/60 px-4 py-6 text-sm text-muted-foreground">
+        No slots were returned for this day.
+      </p>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+    <div className="flex flex-col gap-4">
+      <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
         {(Object.keys(STATUS) as AvailabilityStatus[]).map((status) => {
-          const { label, icon: Icon } = STATUS[status];
+          const { label, icon: Icon, swatch } = STATUS[status];
 
           return (
-            <li key={status} className="inline-flex items-center gap-1">
-              <Icon aria-hidden="true" className="size-3" />
+            <li key={status} className="inline-flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className={cn('grid size-4 place-items-center rounded-[5px] border', swatch)}
+              >
+                <Icon className="size-2.5" />
+              </span>
               {label}
             </li>
           );
         })}
-        <li className="inline-flex items-center gap-1">
-          <CircleCheckIcon aria-hidden="true" className="size-3" />
+        <li className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden="true"
+            className={cn('grid size-4 place-items-center rounded-[5px] border', SELECTED_SWATCH)}
+          >
+            <CircleCheckIcon className="size-2.5" />
+          </span>
           Selected
         </li>
       </ul>
@@ -77,21 +105,25 @@ export function SlotGrid({
                 }
               }}
               className={cn(
-                'flex min-h-16 flex-col items-start justify-center gap-1 rounded-lg border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
-                selectable && 'cursor-pointer hover:bg-accent',
+                'group relative flex min-h-[4.5rem] flex-col justify-between gap-2 rounded-xl border p-3 text-left text-sm transition-all duration-150 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
+                selected
+                  ? 'border-primary bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                  : slot.status === 'AVAILABLE'
+                    ? 'border-border bg-card'
+                    : slot.status === 'TAKEN'
+                      ? 'border-border/70 bg-muted/60 text-muted-foreground'
+                      : 'border-dashed border-border bg-muted/20 text-muted-foreground',
+                selectable &&
+                  !selected &&
+                  'cursor-pointer hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm',
                 !selectable && 'cursor-default',
-                slot.status === 'TAKEN' && 'bg-muted/60',
-                slot.status === 'PAST' && 'bg-muted/30',
-                selected && 'border-primary bg-primary/10 ring-2 ring-primary/30',
               )}
             >
-              <span className="font-medium tabular-nums">{time}</span>
+              <span className="text-base font-semibold tabular-nums">{time}</span>
               <span
                 className={cn(
-                  'inline-flex items-center gap-1 text-xs',
-                  slot.status === 'AVAILABLE' && !selected
-                    ? 'text-foreground'
-                    : 'text-muted-foreground',
+                  'inline-flex items-center gap-1 text-[0.7rem] font-medium',
+                  selected ? 'text-primary-foreground/80' : 'text-muted-foreground',
                 )}
               >
                 <Icon aria-hidden="true" className="size-3" />

@@ -2,11 +2,21 @@ import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import type { AvailabilitySlot, Booking } from '@courtly/contracts';
-import { ArrowLeftIcon, ClockIcon, ShieldIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import {
+  ArrowLeftIcon,
+  CalendarDaysIcon,
+  ClockIcon,
+  MapPinIcon,
+  MousePointerClickIcon,
+  ShieldIcon,
+  XIcon,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { BookingConfirmationDialog } from '@/components/booking-confirmation-dialog';
-import { DatePicker } from '@/components/date-picker';
+import { DatePicker, DateQuickPicks } from '@/components/date-picker';
 import { ErrorState } from '@/components/feedback';
+import { SportIcon } from '@/components/sport-icon';
 import { SlotGrid } from '@/components/slot-grid';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -17,11 +27,13 @@ import { isApiRequestError } from '@/lib/api';
 import { errorMessage, SLOT_TAKEN_MESSAGE } from '@/lib/error-messages';
 import { formatTimeRange, todayInFacility } from '@/lib/facility-time';
 import { formatDuration, formatPrice } from '@/lib/format';
-import { isIsoDate } from '@/lib/dates';
+import { isIsoDate, parseIsoDate } from '@/lib/dates';
 import { parseDateSearch } from '@/lib/search';
 import { selectionPriceCents, selectionWindow, toggleSelection } from '@/lib/slots';
 import type { SlotSelection } from '@/lib/slots';
+import { sportStyle } from '@/lib/sports';
 import { useIsAdmin } from '@/lib/use-session';
+import { cn } from '@/lib/utils';
 import { availabilityQueryOptions } from '@/queries/availability';
 import { useCreateBooking } from '@/queries/bookings';
 import { courtQueryOptions } from '@/queries/courts';
@@ -76,9 +88,9 @@ function CourtDetailPage() {
     return (
       <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading court">
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-5 w-64" />
+        <Skeleton className="h-28 rounded-2xl" />
         <Skeleton className="h-10 w-40" />
-        <Skeleton className="h-64 rounded-xl" />
+        <Skeleton className="h-64 rounded-2xl" />
       </div>
     );
   }
@@ -98,6 +110,10 @@ function CourtDetailPage() {
 
   const court = courtQuery.data;
   const selectionPrice = selection ? selectionPriceCents(court.hourlyPriceCents, selection) : 0;
+  const { bar } = sportStyle(court.sportType);
+  const parsedDate = parseIsoDate(date);
+  const dateLabel = parsedDate ? format(parsedDate, 'EEEE d MMMM') : date;
+  const availableCount = slots.filter((slot) => slot.status === 'AVAILABLE').length;
 
   function handleDateChange(nextDate: string) {
     void navigate({ search: (previous) => ({ ...previous, date: nextDate }) });
@@ -141,28 +157,58 @@ function CourtDetailPage() {
     <div className="flex flex-col gap-6">
       <BackLink />
 
-      <header className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{court.name}</h1>
-          <Badge variant="secondary">{court.sportType}</Badge>
+      <section className="relative overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm">
+        <span aria-hidden="true" className={cn('absolute inset-x-0 top-0 h-1', bar)} />
+        <div className="flex flex-col gap-5 p-5 sm:p-6">
+          <div className="flex items-start gap-4">
+            <SportIcon
+              sportType={court.sportType}
+              className="size-14 rounded-2xl"
+              iconClassName="size-6"
+            />
+            <div className="flex min-w-0 flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+                  {court.name}
+                </h1>
+                <Badge variant="secondary" className="capitalize">
+                  {court.sportType}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Hourly booking at the facility. Pick a day, then one or two consecutive hours.
+              </p>
+            </div>
+          </div>
+
+          <dl className="flex flex-wrap gap-2 text-xs">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-3 py-1.5">
+              <dt className="sr-only">Hourly price</dt>
+              <dd className="font-semibold text-foreground tabular-nums">
+                {formatPrice(court.hourlyPriceCents)}
+              </dd>
+              <span className="text-muted-foreground">per hour</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-3 py-1.5 text-muted-foreground">
+              <dt className="sr-only">Opening hours</dt>
+              <dd className="inline-flex items-center gap-1.5">
+                <ClockIcon aria-hidden="true" className="size-3.5 text-primary" />
+                {court.opensAt}&ndash;{court.closesAt}
+              </dd>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-3 py-1.5 text-muted-foreground">
+              <dt className="sr-only">Facility time zone</dt>
+              <dd className="inline-flex items-center gap-1.5">
+                <MapPinIcon aria-hidden="true" className="size-3.5 text-primary" />
+                {court.timeZone}
+              </dd>
+            </div>
+          </dl>
         </div>
-        <dl className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <dt className="sr-only">Hourly price</dt>
-            <dd>{formatPrice(court.hourlyPriceCents)} per hour</dd>
-          </div>
-          <div className="flex items-center gap-1">
-            <dt className="sr-only">Opening hours</dt>
-            <dd className="inline-flex items-center gap-1">
-              <ClockIcon aria-hidden="true" className="size-4" />
-              {court.opensAt}&ndash;{court.closesAt} ({court.timeZone})
-            </dd>
-          </div>
-        </dl>
-      </header>
+      </section>
 
       {isAdmin ? (
-        <Alert>
+        <Alert className="border-primary/20 bg-primary/5">
           <ShieldIcon aria-hidden="true" />
           <AlertTitle>Read-only admin view</AlertTitle>
           <AlertDescription>
@@ -173,17 +219,37 @@ function CourtDetailPage() {
       ) : null}
 
       <section aria-labelledby="availability-heading" className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="availability-heading" className="text-lg font-medium">
-            Availability
-          </h2>
-          <DatePicker value={date} minDate={facilityToday} onChange={handleDateChange} />
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex flex-col gap-1">
+              <h2 id="availability-heading" className="text-lg font-semibold tracking-tight">
+                Availability
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {dateLabel}
+                {availabilityQuery.isSuccess ? (
+                  <>
+                    {' '}
+                    &middot; {availableCount} {availableCount === 1 ? 'slot' : 'slots'} free
+                  </>
+                ) : null}
+              </p>
+            </div>
+            <DatePicker value={date} minDate={facilityToday} onChange={handleDateChange} />
+          </div>
+
+          <DateQuickPicks
+            value={date}
+            minDate={facilityToday}
+            count={4}
+            onChange={handleDateChange}
+          />
         </div>
 
         {availabilityQuery.isPending ? (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4" aria-busy="true">
             {Array.from({ length: 12 }, (_, index) => (
-              <Skeleton key={index} className="h-16 rounded-lg" />
+              <Skeleton key={index} className="h-[4.5rem] rounded-xl" />
             ))}
           </div>
         ) : null}
@@ -210,29 +276,49 @@ function CourtDetailPage() {
       {!isAdmin ? (
         <section aria-label="Selected slot">
           {selection && windowRange ? (
-            <Card>
-              <CardContent className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                  <p className="font-medium">{formatDuration(selection.durationHours)}</p>
-                  <p className="text-sm text-muted-foreground tabular-nums">
-                    {formatTimeRange(windowRange.startAt, windowRange.endAt, court.timeZone)}{' '}
-                    &middot; {formatPrice(selectionPrice)}
-                  </p>
+            <Card className="sticky bottom-4 z-20 gap-0 border-primary/20 bg-card/95 py-0 shadow-lg shadow-primary/10 backdrop-blur">
+              <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-highlight/30 text-highlight-foreground">
+                    <CalendarDaysIcon aria-hidden="true" className="size-5" />
+                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    <p className="text-sm font-semibold">
+                      {formatDuration(selection.durationHours)} &middot;{' '}
+                      <span className="tabular-nums">
+                        {formatTimeRange(windowRange.startAt, windowRange.endAt, court.timeZone)}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Total{' '}
+                      <span className="font-semibold text-foreground tabular-nums">
+                        {formatPrice(selectionPrice)}
+                      </span>{' '}
+                      &middot; free cancellation up to 2 hours before
+                    </p>
+                  </div>
                 </div>
+
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" onClick={() => setSelectionState(null)}>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectionState(null)}>
+                    <XIcon aria-hidden="true" />
                     Clear
                   </Button>
                   <Button onClick={() => void handleBook()} disabled={createBooking.isPending}>
-                    {createBooking.isPending ? 'Booking…' : 'Book'}
+                    {createBooking.isPending
+                      ? 'Booking…'
+                      : `Book for ${formatPrice(selectionPrice)}`}
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Select a start time. Pick the next free slot too for a two-hour booking.
-            </p>
+            <div className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-card/60 px-4 py-4 text-sm text-muted-foreground">
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
+                <MousePointerClickIcon aria-hidden="true" className="size-4" />
+              </span>
+              <p>Select a start time. Pick the next free slot too for a two-hour booking.</p>
+            </div>
           )}
         </section>
       ) : null}
@@ -250,7 +336,7 @@ function BackLink() {
   return (
     <Link
       to="/"
-      className="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      className="inline-flex w-fit items-center gap-1.5 rounded-full text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       <ArrowLeftIcon aria-hidden="true" className="size-4" />
       All courts

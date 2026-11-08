@@ -46,9 +46,9 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <Empty className="border">
+    <Empty className="border border-dashed border-border bg-card/60">
       <EmptyHeader>
-        <EmptyMedia variant="icon">
+        <EmptyMedia variant="icon" className="size-12 rounded-2xl bg-primary/10 text-primary">
           <CalendarOffIcon aria-hidden="true" />
         </EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>
@@ -67,7 +67,7 @@ export function CardGridSkeleton({ count = 3 }: { count?: number }) {
       aria-label="Loading courts"
     >
       {Array.from({ length: count }, (_, index) => (
-        <Skeleton key={index} className="h-44 rounded-xl" />
+        <Skeleton key={index} className="h-52 rounded-2xl" />
       ))}
     </div>
   );
@@ -77,7 +77,7 @@ export function ListSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="flex flex-col gap-3" aria-busy="true" aria-label="Loading bookings">
       {Array.from({ length: count }, (_, index) => (
-        <Skeleton key={index} className="h-28 rounded-xl" />
+        <Skeleton key={index} className="h-28 rounded-2xl" />
       ))}
     </div>
   );

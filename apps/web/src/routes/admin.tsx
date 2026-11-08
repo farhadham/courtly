@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router';
+import { ShieldXIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsAdmin } from '@/lib/use-session';
 
@@ -27,9 +28,17 @@ function AdminLayout() {
 
 function Forbidden() {
   return (
-    <div className="flex flex-col items-start gap-3">
-      <h1 className="text-2xl font-semibold tracking-tight">Forbidden</h1>
-      <p className="text-sm text-muted-foreground">This area is for administrators only.</p>
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+      <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+        <ShieldXIcon aria-hidden="true" className="size-6" />
+      </span>
+      <div className="flex max-w-sm flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Forbidden</h1>
+        <p className="text-sm text-muted-foreground">
+          This area is for administrators only. Sign in with an admin account to manage the
+          facility.
+        </p>
+      </div>
       <Button asChild variant="outline">
         <Link to="/">Back to courts</Link>
       </Button>
