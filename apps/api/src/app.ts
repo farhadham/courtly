@@ -5,6 +5,7 @@ import type { AppDatabase } from './db/client';
 import { errorHandler } from './http/errors';
 import { createAdminRouter } from './routes/admin';
 import { createAuthRouter } from './routes/auth';
+import { createBookingsRouter } from './routes/bookings';
 import { createCourtsRouter } from './routes/courts';
 import { createHealthRouter } from './routes/health';
 
@@ -35,6 +36,7 @@ export function createApp({ db, jwtSecret, now }: AppDependencies): Express {
   // only public business route.
   app.use(requireAuth(jwtSecret));
   app.use('/courts', createCourtsRouter({ db, now }));
+  app.use('/bookings', createBookingsRouter({ db, now }));
   app.use('/admin', requireRole('ADMIN'), createAdminRouter({ db }));
 
   // Unknown routes answer in the error contract rather than Express's HTML

@@ -117,6 +117,13 @@ function clockParts(value: string): { hour: number; minute: number } {
   };
 }
 
+/** The facility-local calendar day that contains an instant. */
+export function localDateAt(instant: Date): LocalDate {
+  const parts = zonedParts(instant);
+
+  return { year: parts.year, month: parts.month, day: parts.day };
+}
+
 /** The local opening and closing instants of a court on a calendar day. */
 export function courtOpeningWindow(
   court: Clock,
