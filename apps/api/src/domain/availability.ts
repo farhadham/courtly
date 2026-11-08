@@ -172,20 +172,23 @@ export function availabilityForDay({
   bookings: BookingInterval[];
   now: Date;
 }): AvailabilitySlot[] {
-  const opens = clockParts(court.opensAt);
-  const closes = clockParts(court.closesAt);
-  const opensMinutes = opens.hour * 60 + opens.minute;
-  const closesMinutes = closes.hour * 60 + closes.minute;
+  const { opensAt: opens, closesAt: closes } = courtOpeningWindow(court, date);
   const slots: AvailabilitySlot[] = [];
 
-  for (let minutes = opensMinutes; minutes + 60 <= closesMinutes; minutes += 60) {
-    const start = zonedTimeToUtc(date, Math.floor(minutes / 60), minutes % 60);
+  // Step through real hours from the opening instant instead of converting
+  // each wall-clock hour separately: a Lisbon DST day either skips 01:00 or
+  // repeats it, so wall-clock arithmetic would duplicate or drop a slot.
+  let start = opens;
+
+  while (start.getTime() + HOUR_MS <= closes.getTime()) {
     const end = new Date(start.getTime() + HOUR_MS);
 
     slots.push({
       startsAt: formatInstant(start),
       status: slotStatus(start, end, bookings, now),
     });
+
+    start = end;
   }
 
   return slots;
