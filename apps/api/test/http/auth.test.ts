@@ -41,7 +41,7 @@ describe('authentication', () => {
     expect(body.user).not.toHaveProperty('passwordHash');
   });
 
-  it('rejects a wrong password with the UNAUTHORIZED contract error', async () => {
+  it('rejects a wrong password with the INVALID_CREDENTIALS contract error', async () => {
     const response = await request(app)
       .post('/auth/login')
       .send({ email: 'user@courtly.test', password: 'not-the-password' })
@@ -49,7 +49,7 @@ describe('authentication', () => {
 
     expect(response.body).toEqual({
       error: {
-        code: 'UNAUTHORIZED',
+        code: 'INVALID_CREDENTIALS',
         message: 'Invalid email or password',
         details: {},
       },

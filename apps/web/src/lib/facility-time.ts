@@ -4,6 +4,12 @@
  * in Lisbon reads 18:00 in Tokyo too, labelled as facility time.
  */
 
+/**
+ * Only used when a booking's court is no longer in the court list (for example
+ * a deactivated court in history). Live court payloads carry their own zone.
+ */
+export const DEFAULT_FACILITY_TIME_ZONE = 'Europe/Lisbon';
+
 export function formatFacilityTime(instant: Date | string, timeZone: string): string {
   return new Intl.DateTimeFormat('en-GB', {
     timeZone,
