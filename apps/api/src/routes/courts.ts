@@ -17,6 +17,7 @@ import {
   localDateFromIso,
 } from '../domain/availability';
 import { ApiError } from '../http/errors';
+import { data } from '../http/respond';
 
 export interface CourtsRouterDependencies {
   db: AppDatabase;
@@ -79,7 +80,7 @@ export function createCourtsRouter({
       .where(filters.length > 0 ? and(...filters) : undefined)
       .orderBy(courts.name);
 
-    res.json(rows.map(toCourtResponse));
+    res.json(data(rows.map(toCourtResponse)));
   });
 
   router.get('/:id/availability', async (req, res) => {
@@ -122,12 +123,14 @@ export function createCourtsRouter({
       );
 
     res.json(
-      availabilityForDay({
-        court,
-        date,
-        bookings: activeBookings,
-        now: now(),
-      }),
+      data(
+        availabilityForDay({
+          court,
+          date,
+          bookings: activeBookings,
+          now: now(),
+        }),
+      ),
     );
   });
 
@@ -144,7 +147,7 @@ export function createCourtsRouter({
       throw new ApiError(404, 'NOT_FOUND', 'Court not found');
     }
 
-    res.json(toCourtResponse(court));
+    res.json(data(toCourtResponse(court)));
   });
 
   return router;

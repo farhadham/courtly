@@ -38,7 +38,7 @@ export function createApp({ db, jwtSecret, now }: AppDependencies): Express {
   app.use('/admin', requireRole('ADMIN'), createAdminRouter({ db }));
 
   // Unknown routes answer in the error contract rather than Express's HTML
-  // default, so API consumers only ever parse one response shape.
+  // default, so failures only ever have one shape to parse.
   app.use((_req, res) => {
     res.status(404).json({
       error: {

@@ -19,8 +19,9 @@ export {
   type UserRole,
 } from './schema';
 
-export const CONTRACTS_VERSION = '0.1.0';
+export const CONTRACTS_VERSION = '0.2.0';
 
+export type { ApiData } from './envelope';
 export type { HealthResponse } from './health';
 
 export { ERROR_CODES, apiErrorSchema } from './errors';

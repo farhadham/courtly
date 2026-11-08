@@ -6,6 +6,7 @@ import type { LoginResponse } from '@courtly/contracts';
 import { signAuthToken } from '../auth/tokens';
 import type { AppDatabase } from '../db/client';
 import { ApiError } from '../http/errors';
+import { data } from '../http/respond';
 
 export interface AuthRouterDependencies {
   db: AppDatabase;
@@ -44,7 +45,7 @@ export function createAuthRouter({ db, jwtSecret }: AuthRouterDependencies): Rou
       user: { id: user.id, email: user.email, role: user.role },
     };
 
-    res.json(body);
+    res.json(data(body));
   });
 
   return router;

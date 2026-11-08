@@ -9,6 +9,7 @@ import {
 import type { AppDatabase } from '../db/client';
 import { isUniqueViolation } from '../db/errors';
 import { ApiError } from '../http/errors';
+import { data } from '../http/respond';
 import { toCourtResponse, toTimeOfDay } from './courts';
 
 export interface AdminRouterDependencies {
@@ -47,7 +48,7 @@ export function createAdminRouter({ db }: AdminRouterDependencies): Router {
       throw new Error('Court insert did not return a row');
     }
 
-    res.status(201).json(toCourtResponse(court));
+    res.status(201).json(data(toCourtResponse(court)));
   });
 
   router.patch('/courts/:id', async (req, res) => {
@@ -106,7 +107,7 @@ export function createAdminRouter({ db }: AdminRouterDependencies): Router {
       throw new ApiError(404, 'NOT_FOUND', 'Court not found');
     }
 
-    res.json(toCourtResponse(court));
+    res.json(data(toCourtResponse(court)));
   });
 
   return router;

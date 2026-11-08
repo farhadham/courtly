@@ -64,20 +64,24 @@ Deactivating a court never deletes it and never deletes its bookings.
 
 All routes require a JWT except `POST /auth/login`.
 
+Every successful response is a single-key envelope, `{ "data": … }`. Failures
+use `{ "error": … }` (see below); the two shapes never mix, so a client can
+branch on which key is present.
+
 ```
-POST   /auth/login                          → { token, user }
+POST   /auth/login                          → { data: { token, user } }
 
-GET    /courts                              → active courts; ?sport=padel; admin: ?includeInactive=true
-GET    /courts/:id
-GET    /courts/:id/availability?date=YYYY-MM-DD
+GET    /courts                              → { data: Court[] }; ?sport=padel; admin: ?includeInactive=true
+GET    /courts/:id                          → { data: Court }
+GET    /courts/:id/availability?date=YYYY-MM-DD → { data: Slot[] }
 
-POST   /bookings                            → { courtId, startAt, durationHours }
-GET    /bookings/me?scope=upcoming|past
-POST   /bookings/:id/cancel
+POST   /bookings                            → { data: Booking }; body { courtId, startAt, durationHours }
+GET    /bookings/me?scope=upcoming|past     → { data: Booking[] }
+POST   /bookings/:id/cancel                 → { data: Booking }
 
-POST   /admin/courts
-PATCH  /admin/courts/:id
-GET    /admin/bookings?date=YYYY-MM-DD      → { bookings[], totalRevenueCents }
+POST   /admin/courts                        → { data: Court }
+PATCH  /admin/courts/:id                    → { data: Court }
+GET    /admin/bookings?date=YYYY-MM-DD      → { data: { bookings[], totalRevenueCents } }
 ```
 
 Cancellation is `POST /bookings/:id/cancel` rather than `DELETE`: it is a state transition with a rule attached, and the row survives.
@@ -112,7 +116,7 @@ Codes are a closed enum, typed in `packages/contracts`:
 For a court and a Lisbon calendar day, return every one-hour slot from `opens_at` to `closes_at`:
 
 ```json
-[{ "startsAt": "2026-11-07T08:00:00+00:00", "status": "AVAILABLE" }]
+{ "data": [{ "startsAt": "2026-11-07T08:00:00+00:00", "status": "AVAILABLE" }] }
 ```
 
 `status` ∈ `AVAILABLE | TAKEN | PAST`. Past slots are shown, not hidden. A 2-hour booking marks both of its slots `TAKEN`. A slot is only a legal start if the requested duration fits before closing.

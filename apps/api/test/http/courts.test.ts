@@ -7,6 +7,7 @@ import { createApp } from '../../src/app';
 import { signAuthToken } from '../../src/auth/tokens';
 import { seedDatabase } from '../../src/db/seed';
 import { createTestPool, testDatabaseUrl } from '../db/test-database';
+import { payload } from './payload';
 
 const jwtSecret = 'test-secret';
 const USER_ID = '11111111-1111-4111-8111-111111111101';
@@ -41,7 +42,7 @@ describe('courts API', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      const body = courtSchema.array().parse(response.body);
+      const body = courtSchema.array().parse(payload(response));
 
       expect(body.map((court) => court.name)).toEqual(['Padel 1', 'Padel 2', 'Tennis 1']);
       expect(body[0]).toMatchObject({
@@ -65,7 +66,7 @@ describe('courts API', () => {
       expect(
         courtSchema
           .array()
-          .parse(response.body)
+          .parse(payload(response))
           .map((court) => court.name),
       ).toEqual(['Padel 1', 'Padel 2']);
     });
@@ -82,7 +83,7 @@ describe('courts API', () => {
       expect(
         courtSchema
           .array()
-          .parse(response.body)
+          .parse(payload(response))
           .map((court) => court.name),
       ).toEqual(['Padel 1', 'Padel 2']);
     });
@@ -96,7 +97,7 @@ describe('courts API', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      const body = courtSchema.array().parse(response.body);
+      const body = courtSchema.array().parse(payload(response));
 
       expect(body.map((court) => court.name)).toEqual(['Padel 1', 'Padel 2', 'Tennis 1']);
       expect(body.find((court) => court.name === 'Tennis 1')).toMatchObject({ isActive: false });
@@ -117,7 +118,7 @@ describe('courts API', () => {
         })
         .expect(201);
 
-      expect(response.body).toMatchObject({
+      expect(payload(response)).toMatchObject({
         name: 'Squash 1',
         sportType: 'squash',
         hourlyPriceCents: 1_800,
@@ -125,7 +126,7 @@ describe('courts API', () => {
         closesAt: '21:00',
         isActive: true,
       });
-      expect(courtSchema.parse(response.body).id).toBeTypeOf('string');
+      expect(courtSchema.parse(payload(response)).id).toBeTypeOf('string');
 
       const listing = await request(app)
         .get('/courts')
@@ -134,7 +135,7 @@ describe('courts API', () => {
       expect(
         courtSchema
           .array()
-          .parse(listing.body)
+          .parse(payload(listing))
           .map((court) => court.name),
       ).toContain('Squash 1');
     });
@@ -236,7 +237,7 @@ describe('courts API', () => {
         })
         .expect(200);
 
-      expect(response.body).toMatchObject({
+      expect(payload(response)).toMatchObject({
         id: '22222222-2222-4222-8222-222222222201',
         name: 'Padel One',
         sportType: 'squash',
@@ -250,7 +251,7 @@ describe('courts API', () => {
         .get('/courts/22222222-2222-4222-8222-222222222201')
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
-      expect(detail.body).toMatchObject({ name: 'Padel One', hourlyPriceCents: 2_500 });
+      expect(payload(detail)).toMatchObject({ name: 'Padel One', hourlyPriceCents: 2_500 });
     });
 
     it('deactivates a court without removing it from the facility', async () => {
@@ -260,7 +261,7 @@ describe('courts API', () => {
         .send({ isActive: false })
         .expect(200);
 
-      expect(response.body).toMatchObject({ name: 'Padel 1', isActive: false });
+      expect(payload(response)).toMatchObject({ name: 'Padel 1', isActive: false });
 
       const listing = await request(app)
         .get('/courts')
@@ -269,7 +270,7 @@ describe('courts API', () => {
       expect(
         courtSchema
           .array()
-          .parse(listing.body)
+          .parse(payload(listing))
           .map((court) => court.name),
       ).not.toContain('Padel 1');
 
@@ -277,7 +278,7 @@ describe('courts API', () => {
         .get('/courts/22222222-2222-4222-8222-222222222201')
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
-      expect(detail.body).toMatchObject({ name: 'Padel 1', isActive: false });
+      expect(payload(detail)).toMatchObject({ name: 'Padel 1', isActive: false });
     });
 
     it('rejects renaming a court to a name already taken', async () => {
@@ -345,7 +346,7 @@ describe('courts API', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      expect(response.body).toMatchObject({
+      expect(payload(response)).toMatchObject({
         id: '22222222-2222-4222-8222-222222222201',
         name: 'Padel 1',
         sportType: 'padel',
@@ -364,7 +365,7 @@ describe('courts API', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      expect(response.body).toMatchObject({ name: 'Tennis 1', isActive: false });
+      expect(payload(response)).toMatchObject({ name: 'Tennis 1', isActive: false });
     });
 
     it('answers an unknown court with NOT_FOUND', async () => {

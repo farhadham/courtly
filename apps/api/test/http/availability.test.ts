@@ -7,6 +7,7 @@ import { createApp } from '../../src/app';
 import { signAuthToken } from '../../src/auth/tokens';
 import { seedDatabase } from '../../src/db/seed';
 import { createTestPool, testDatabaseUrl } from '../db/test-database';
+import { payload } from './payload';
 
 const jwtSecret = 'test-secret';
 const USER_ID = '11111111-1111-4111-8111-111111111101';
@@ -45,7 +46,7 @@ describe('availability API', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      const slots = availabilityResponseSchema.parse(response.body);
+      const slots = availabilityResponseSchema.parse(payload(response));
 
       expect(slots).toHaveLength(15);
       expect(slots[0]).toEqual({
@@ -87,7 +88,7 @@ describe('availability API', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      const slots = availabilityResponseSchema.parse(response.body);
+      const slots = availabilityResponseSchema.parse(payload(response));
       const statusAt = (hour: number) =>
         slots.find((slot) => slot.startsAt === `2030-01-15T${hour}:00:00+00:00`)?.status;
 
@@ -111,7 +112,7 @@ describe('availability API', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      const slots = availabilityResponseSchema.parse(response.body);
+      const slots = availabilityResponseSchema.parse(payload(response));
       const statusAt = (hour: number) =>
         slots.find((slot) => slot.startsAt === `2030-01-15T${hour}:00:00+00:00`)?.status;
 
@@ -128,7 +129,7 @@ describe('availability API', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      const slots = availabilityResponseSchema.parse(response.body);
+      const slots = availabilityResponseSchema.parse(payload(response));
       const statusAt = (hour: number) =>
         slots.find(
           (slot) => slot.startsAt === `2030-01-15T${String(hour).padStart(2, '0')}:00:00+00:00`,
@@ -150,7 +151,7 @@ describe('availability API', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      const slots = availabilityResponseSchema.parse(response.body);
+      const slots = availabilityResponseSchema.parse(payload(response));
 
       // 08:00 WEST is 07:00 UTC; 22:00 WEST is 21:00 UTC.
       expect(slots).toHaveLength(15);
@@ -186,7 +187,7 @@ describe('availability API', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(200);
 
-      const slots = availabilityResponseSchema.parse(response.body);
+      const slots = availabilityResponseSchema.parse(payload(response));
 
       expect(slots.map((slot) => slot.startsAt)).toEqual([
         '2030-01-15T07:30:00+00:00',

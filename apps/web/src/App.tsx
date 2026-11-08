@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { HealthResponse } from '@courtly/contracts';
+import { fetchData } from './lib/api';
 
 type ApiState =
   { kind: 'loading' } | { kind: 'ok'; health: HealthResponse } | { kind: 'error'; message: string };
@@ -12,9 +13,7 @@ export default function App() {
 
     async function probe() {
       try {
-        const response = await fetch('/api/health');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const health = (await response.json()) as HealthResponse;
+        const health = await fetchData<HealthResponse>('/api/health');
         if (!cancelled) setApi({ kind: 'ok', health });
       } catch (error) {
         if (!cancelled) {
