@@ -16,7 +16,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run test -w @courtly/api",
+    "test": "npm run test -w @courtly/api && npm run test -w @courtly/web",
     "check": "npm run format:check && npm run lint && npm run typecheck",
     "dev:api": "npm run dev -w @courtly/api",
     "dev:web": "npm run dev -w @courtly/web",
