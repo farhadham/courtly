@@ -16,5 +16,5 @@ export function loadEnvironment(): void {
 export function databaseUrl(): string {
   loadEnvironment();
 
-  return process.env.DATABASE_URL ?? 'postgres://courtly:courtly@localhost:5432/courtly';
+  return process.env.DATABASE_URL ?? 'postgres://courtly:courtly@localhost:5433/courtly';
 }

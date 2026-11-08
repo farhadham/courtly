@@ -13,7 +13,7 @@ if (existsSync(envFile)) {
 }
 
 export const testDatabaseUrl =
-  process.env.TEST_DATABASE_URL ?? 'postgres://courtly:courtly@localhost:5432/courtly_test';
+  process.env.TEST_DATABASE_URL ?? 'postgres://courtly:courtly@localhost:5433/courtly_test';
 
 function assertTestDatabase(connectionString: string): void {
   const database = decodeURIComponent(new URL(connectionString).pathname.slice(1));

@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: courtly
       POSTGRES_DB: courtly
     ports:
-      - '5432:5432'
+      - '5433:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -27,7 +27,7 @@ services:
     command:
       - sh
       - -c
-      - npm run db:migrate:prod --if-present && npm run db:seed:prod --if-present
+      - npm run db:migrate:prod && npm run db:seed:prod
     environment:
       DATABASE_URL: postgres://courtly:courtly@db:5432/courtly
     depends_on:

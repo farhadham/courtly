@@ -14,6 +14,6 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgres://courtly:courtly@localhost:5432/courtly',
+    url: process.env.DATABASE_URL ?? 'postgres://courtly:courtly@localhost:5433/courtly',
   },
 });

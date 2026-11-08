@@ -102,8 +102,11 @@ npm run dev:api    # http://localhost:3001
 npm run dev:web    # http://localhost:3000
 ```
 
-Do not run the Docker stack and the local servers at the same time — they share
-ports 3000, 3001 and 5432.
+Do not run the Docker web container and the Vite dev server at the same time —
+both bind port 3000. The Compose API has no host port (nginx proxies it inside
+the network), so 3001 is free for `npm run dev:api`. The Compose database
+publishes on host port 5433 so it can sit next to a local PostgreSQL; the
+`db` container is reused for local development.
 
 ## What I would do next
 
