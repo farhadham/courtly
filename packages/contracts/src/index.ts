@@ -28,8 +28,7 @@ export { ERROR_CODES, apiErrorSchema } from './errors';
 export type { ApiErrorBody, ErrorCode } from './errors';
 
 export { authUserSchema, loginRequestSchema, loginResponseSchema } from './auth';
-export { userRowSchema } from './auth';
-export type { AuthUser, LoginRequest, LoginResponse, UserRow } from './auth';
+export type { AuthUser, LoginRequest, LoginResponse } from './auth';
 
 export { timeOfDaySchema } from './primitives';
 

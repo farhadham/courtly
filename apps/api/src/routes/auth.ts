@@ -21,23 +21,19 @@ export interface AuthRouterDependencies {
 export function createAuthRouter({ db, jwtSecret }: AuthRouterDependencies): Router {
   const router = Router();
 
-  router.post('/login', async (req, res, next) => {
+  router.post('/login', async (req, res) => {
     const parsed = loginRequestSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      next(
-        new ApiError(400, 'VALIDATION_FAILED', 'Invalid login request', {
-          issues: parsed.error.issues,
-        }),
-      );
-      return;
+      throw new ApiError(400, 'VALIDATION_FAILED', 'Invalid login request', {
+        issues: parsed.error.issues,
+      });
     }
 
     const [user] = await db.select().from(users).where(eq(users.email, parsed.data.email)).limit(1);
 
     if (!user || !(await compare(parsed.data.password, user.passwordHash))) {
-      next(new ApiError(401, 'UNAUTHORIZED', 'Invalid email or password'));
-      return;
+      throw new ApiError(401, 'UNAUTHORIZED', 'Invalid email or password');
     }
 
     const body: LoginResponse = {

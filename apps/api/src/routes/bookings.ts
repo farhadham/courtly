@@ -8,7 +8,7 @@ import {
   myBookingsQuerySchema,
 } from '@courtly/contracts';
 import type { Booking, BookingRow } from '@courtly/contracts';
-import { requireRole } from '../auth/middleware';
+import { requireAuthUser, requireRole } from '../auth/middleware';
 import type { AppDatabase } from '../db/client';
 import { isExclusionViolation } from '../db/errors';
 import { formatInstant } from '../domain/availability';
@@ -26,6 +26,8 @@ export interface BookingsRouterDependencies {
 
 const REJECTION_MESSAGES: Record<BookingRejection, string> = {
   BOOKING_IN_PAST: 'A booking cannot start at or before the current time',
+  BOOKING_OFF_SLOT:
+    'A booking must start on a slot boundary (a whole number of hours after opening)',
   OUTSIDE_OPENING_HOURS: 'The booking must fit inside the court opening hours',
   COURT_INACTIVE: 'This court is not accepting new bookings',
 };
@@ -84,11 +86,7 @@ export function createBookingsRouter({
       });
     }
 
-    const userId = req.auth?.sub;
-
-    if (!userId) {
-      throw new ApiError(401, 'UNAUTHORIZED', 'Authentication required');
-    }
+    const userId = requireAuthUser(req).sub;
 
     const isUpcoming = parsed.data.scope === 'upcoming';
     const instant = now();
@@ -113,11 +111,7 @@ export function createBookingsRouter({
       });
     }
 
-    const userId = req.auth?.sub;
-
-    if (!userId) {
-      throw new ApiError(401, 'UNAUTHORIZED', 'Authentication required');
-    }
+    const userId = requireAuthUser(req).sub;
 
     const [court] = await db
       .select()
@@ -179,11 +173,7 @@ export function createBookingsRouter({
       throw new ApiError(404, 'NOT_FOUND', 'Booking not found');
     }
 
-    const userId = req.auth?.sub;
-
-    if (!userId) {
-      throw new ApiError(401, 'UNAUTHORIZED', 'Authentication required');
-    }
+    const userId = requireAuthUser(req).sub;
 
     const [booking] = await db
       .select()

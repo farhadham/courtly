@@ -17,7 +17,7 @@ export interface BookingCourt {
  */
 export type BookingRejection = Extract<
   ErrorCode,
-  'BOOKING_IN_PAST' | 'OUTSIDE_OPENING_HOURS' | 'COURT_INACTIVE'
+  'BOOKING_IN_PAST' | 'BOOKING_OFF_SLOT' | 'OUTSIDE_OPENING_HOURS' | 'COURT_INACTIVE'
 >;
 
 export type BookingValidation =
@@ -59,6 +59,13 @@ export function validateBooking({
 
   if (startAt.getTime() < opensAt.getTime() || endAt.getTime() > closesAt.getTime()) {
     return { ok: false, code: 'OUTSIDE_OPENING_HOURS' };
+  }
+
+  // Bookings are made in whole hours: `startAt` must sit on the same slot grid
+  // `availabilityForDay` emits, anchored to the court's opening time (GLOSSARY:
+  // a slot is "the granularity at which bookings are made").
+  if ((startAt.getTime() - opensAt.getTime()) % HOUR_MS !== 0) {
+    return { ok: false, code: 'BOOKING_OFF_SLOT' };
   }
 
   return {

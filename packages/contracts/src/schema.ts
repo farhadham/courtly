@@ -43,7 +43,7 @@ export const courts = pgTable(
   (table) => [
     uniqueIndex('courts_name_unique').on(sql`lower(${table.name})`),
     check('courts_sport_type_length', sql`char_length(${table.sportType}) between 1 and 50`),
-    check('courts_hourly_price_non_negative', sql`${table.hourlyPriceCents} >= 0`),
+    check('courts_hourly_price_positive', sql`${table.hourlyPriceCents} > 0`),
     check('courts_opening_window', sql`${table.opensAt} < ${table.closesAt}`),
   ],
 );

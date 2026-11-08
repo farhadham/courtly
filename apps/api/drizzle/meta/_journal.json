@@ -22,6 +22,20 @@
       "when": 1794064327526,
       "tag": "0002_courts_name_lower_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794131557222,
+      "tag": "0003_courts_hourly_price_preflight",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794131581325,
+      "tag": "0004_courts_hourly_price_positive",
+      "breakpoints": true
     }
   ]
 }

@@ -22,7 +22,7 @@ Roles are enforced on the API by middleware. Hiding a button is not enforcement.
 | `id`                 | uuid    |                                                  |
 | `name`               | text    | unique                                           |
 | `sport_type`         | text    | free label — padel, tennis, squash, … 1–50 chars |
-| `hourly_price_cents` | integer | money is never a float                           |
+| `hourly_price_cents` | integer | money is never a float; must be positive         |
 | `opens_at`           | time    | local, e.g. `08:00`                              |
 | `closes_at`          | time    | local, e.g. `23:00`                              |
 | `is_active`          | boolean |                                                  |
@@ -49,7 +49,7 @@ Deactivating a court never deletes it and never deletes its bookings.
 
 ## Business rules
 
-1. **Duration.** A booking is exactly 1 or 2 consecutive hours. Nothing else is accepted.
+1. **Duration.** A booking is exactly 1 or 2 consecutive hours and starts on a slot boundary — a whole number of hours after the court's opening time. Nothing else is accepted.
 2. **Opening hours.** `start_at` must be at or after opening and `end_at` at or before closing, on that court's local day.
 3. **Future only.** A booking is rejected when `start_at <= now()`. The same boundary splits a user's history: `upcoming` means a start strictly after `now()`.
 4. **No overlap.** No two `CONFIRMED` bookings on the same court may overlap. Enforced by a PostgreSQL exclusion constraint, not by application code. Back-to-back is allowed: `[start, end)` bounds.
@@ -59,6 +59,8 @@ Deactivating a court never deletes it and never deletes its bookings.
 8. **Cancelled bookings.** Kept as rows with `status = 'CANCELLED'`. Their slots return to availability. They never count toward revenue. They stay in the owner's history but never appear as upcoming.
 9. **Price snapshot.** Revenue for a past booking is unaffected by later edits to the court's price.
 10. **Inactive courts.** Not listed to users, refuse new bookings, keep existing bookings, and still count toward revenue.
+
+**Rejection precedence.** When a start breaks more than one rule, the API reports the first failing check in this order: inactive court, past start, opening hours, slot alignment. An off-grid start before opening therefore returns `OUTSIDE_OPENING_HOURS`, not `BOOKING_OFF_SLOT`. Every booking rejection is still `422`.
 
 ## API surface
 
@@ -107,6 +109,7 @@ Codes are a closed enum, typed in `packages/contracts`:
 | `CANCELLATION_WINDOW_CLOSED` | 409    |
 | `BOOKING_ALREADY_CANCELLED`  | 409    |
 | `BOOKING_IN_PAST`            | 422    |
+| `BOOKING_OFF_SLOT`           | 422    |
 | `OUTSIDE_OPENING_HOURS`      | 422    |
 | `COURT_INACTIVE`             | 422    |
 

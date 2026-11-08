@@ -1,0 +1,2 @@
+ALTER TABLE "courts" DROP CONSTRAINT "courts_hourly_price_non_negative";--> statement-breakpoint
+ALTER TABLE "courts" ADD CONSTRAINT "courts_hourly_price_positive" CHECK ("courts"."hourly_price_cents" > 0);

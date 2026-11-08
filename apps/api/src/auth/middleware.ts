@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 import type { UserRole } from '@courtly/contracts';
 import { ApiError } from '../http/errors';
 import { verifyAuthToken } from './tokens';
@@ -52,4 +52,17 @@ export function requireRole(role: UserRole): RequestHandler {
 
     next();
   };
+}
+
+/**
+ * Reads the authenticated principal that `requireAuth` attaches. Routes mounted
+ * behind `requireAuth` can assume it is present; this narrows the optional
+ * `req.auth` to a value and fails loudly if that invariant is ever broken.
+ */
+export function requireAuthUser(req: Request): AuthTokenPayload {
+  if (!req.auth) {
+    throw new ApiError(401, 'UNAUTHORIZED', 'Authentication required');
+  }
+
+  return req.auth;
 }
