@@ -79,6 +79,7 @@ GET    /courts/:id/availability?date=YYYY-MM-DD → { data: Slot[] }
 
 POST   /bookings                            → { data: Booking }; body { courtId, startAt, durationHours }
 GET    /bookings/me?scope=upcoming|past     → { data: Booking[] }
+GET    /bookings/:id                        → { data: Booking }; owner only, 404 for anyone else
 POST   /bookings/:id/cancel                 → { data: Booking }
 
 POST   /admin/courts                        → { data: Court }
