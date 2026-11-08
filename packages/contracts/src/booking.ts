@@ -4,6 +4,8 @@ import { BOOKING_STATUSES, bookings } from './schema';
 
 export const bookingRowSchema = createSelectSchema(bookings);
 
+export const bookingIdParamSchema = z.object({ id: z.uuid() });
+
 /**
  * A booking as the API returns it: camelCase, with instants in the `+00:00`
  * form the availability endpoint uses. `priceCents` is the value snapshotted

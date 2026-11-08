@@ -105,6 +105,7 @@ Codes are a closed enum, typed in `packages/contracts`:
 | `SLOT_TAKEN`                 | 409    |
 | `COURT_NAME_TAKEN`           | 409    |
 | `CANCELLATION_WINDOW_CLOSED` | 409    |
+| `BOOKING_ALREADY_CANCELLED`  | 409    |
 | `BOOKING_IN_PAST`            | 422    |
 | `OUTSIDE_OPENING_HOURS`      | 422    |
 | `COURT_INACTIVE`             | 422    |

@@ -45,6 +45,7 @@ export type { Court, CourtCreate, CourtListQuery, CourtRow, CourtUpdate } from '
 
 export {
   bookingCreateSchema,
+  bookingIdParamSchema,
   bookingRowSchema,
   bookingSchema,
 } from './booking';
